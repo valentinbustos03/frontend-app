@@ -1,0 +1,39 @@
+/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+@theme {
+  --color-u-orange: #f44336;
+  --color-u-grey: #2a2a2a;
+  --color-u-green: #36f585;
+  --color-u-red: #ff2f2f;
+}
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #212121;
+  color: #fff;
+}
+
+.card-bg {
+  background-color: var(--color-u-grey);
+}
+
+.u-orange-text {
+  color: var(--color-u-orange);
+}
+
+button .delete {
+  color: var(--color-u-red);
+}
+button .edit {
+  color: var(--color-u-green);
+}
+
+.error-snackbar {
+  background-color: rgb(255, 217, 217);
+  border: 1px solid red;
+}

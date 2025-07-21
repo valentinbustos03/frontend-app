@@ -1,0 +1,36 @@
+@use '@angular/material' as mat;
+@use '../src_theme-colors' as u-theme;
+
+html {
+  color-scheme: light dark;
+  @include mat.theme((
+    color: (primary: u-theme.$primary-palette,
+          tertiary: u-theme.$tertiary-palette
+        ),
+    typography: (plain-family: Inter,
+          brand-family: Open Sans,
+          bold-weight: 900,
+          medium-weight: 500,
+          regular-weight: 300,
+        ),
+    density: 0
+  ));
+  @include mat.button-overrides((
+    filled-container-color:var(--color-u-orange),
+    filled-label-text-color:white,
+    outlined-label-text-color:var(--color-u-orange),
+    outlined-outline-color:var(--color-u-orange),
+    outlined-ripple-color:white
+    ));
+  @include mat.table-overrides((background-color: #212121,
+        header-headline-color: var(--color-u-orange),
+        row-item-outline-color:var(--color-u-orange),
+        header-headline-size: 1rem,
+        // header-headline-weight: 500
+      ));
+}
+
+body {
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}
