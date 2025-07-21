@@ -8,9 +8,6 @@ export function loggingInterceptor(req: HttpRequest<unknown>, next: HttpHandlerF
   _snackBar.open(req.url, 'Ok', {
     duration: 3000
   })
-
-  console.log('Viva peron', req);
-
   return next(req);
 }
 

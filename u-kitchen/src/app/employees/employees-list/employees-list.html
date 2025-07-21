@@ -2,11 +2,11 @@
   <main class="flex-grow flex justify-center w-full p-6">
     <div class="card-bg p-6 rounded-lg shadow-lg w-full max-w-10/12 h-fit">
       <div class="mb-4 flex flex-row items-center justify-between u-orange-text">
-        <h2 class="text-4xl font-semibold ">Employees</h2>
+        <h2 class="text-4xl font-semibold title-employees">Employees</h2>
         <button matButton="filled" class="u-orange-button" (click)="onCreate()">New
           Employee</button>
       </div>
-      <table mat-table [dataSource]="dataSource" class="w-full">
+      <table mat-table [dataSource]="dataSource" class="w-full bg-gray-500">
         <ng-container matColumnDef="taxId">
           <th mat-header-cell *matHeaderCellDef>Tax Id</th>
           <td mat-cell *matCellDef="let element">{{ element.taxId }}</td>
@@ -21,7 +21,8 @@
         </ng-container>
         <ng-container matColumnDef="workedHours">
           <th mat-header-cell *matHeaderCellDef>Worked Hours</th>
-          <td mat-cell *matCellDef="let element">{{ element.workedHours }}</td>
+          <td mat-cell *matCellDef="let element">{{
+            element.workedHours }}</td>
         </ng-container>
         <ng-container matColumnDef="priceHour">
           <th mat-header-cell *matHeaderCellDef>Price Hour</th>

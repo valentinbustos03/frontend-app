@@ -37,15 +37,15 @@ export class EmployeesList implements OnInit {
     ];
     this.dataSource.data = employees;
     // Futura implementación: 
-    this.employeeService.getEmployees().subscribe({
-      next: (data: any) => { console.log(data); this.dataSource.data = data.data },
-      error: (error: any) => this._snackBar.open(error.message, "Ok", {
-        duration: 3000,
-        horizontalPosition: 'end',
-        verticalPosition: 'top',
-        panelClass: ['error-snackbar']
-      })
-    });
+    // this.employeeService.getEmployees().subscribe({
+    //   next: (data: any) => { console.log(data); this.dataSource.data = data.data },
+    //   error: (error: any) => this._snackBar.open(error.message, "Ok", {
+    //     duration: 3000,
+    //     horizontalPosition: 'end',
+    //     verticalPosition: 'top',
+    //     panelClass: ['error-snackbar']
+    //   })
+    // });
   }
 
   // Placeholder para crear nuevo employee
@@ -73,6 +73,7 @@ export class EmployeesList implements OnInit {
 
     const dialogRef = this.dialog.open(EditEmployee, {
       data: { employee: employee },
+      height: 'fit-content',
     });
 
     dialogRef.afterClosed().subscribe(result => {

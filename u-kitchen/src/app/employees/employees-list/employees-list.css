@@ -1,3 +1,22 @@
+.title-employees {
+  /* font-family: var(
+    --mat-toolbar-title-text-font,
+    var(--mat-sys-title-large-font)
+  ); */
+}
+
+.mat-column-workedHours {
+  text-align: right;
+}
+
+.mat-column-priceHour {
+  text-align: right;
+}
+
+.mat-column-salary {
+  text-align: right;
+}
 .mat-column-actions {
+  text-align: center;
   width: min-content;
 }

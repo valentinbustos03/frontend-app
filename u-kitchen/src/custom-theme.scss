@@ -22,12 +22,19 @@ html {
     outlined-outline-color:var(--color-u-orange),
     outlined-ripple-color:white
     ));
-  @include mat.table-overrides((background-color: #212121,
-        header-headline-color: var(--color-u-orange),
-        row-item-outline-color:var(--color-u-orange),
-        header-headline-size: 1rem,
-        // header-headline-weight: 500
-      ));
+  @include mat.table-overrides((
+    background-color: rgb(17, 17, 17),
+    header-headline-color: var(--color-u-orange),
+    row-item-outline-color:var(--color-u-orange),
+    header-headline-size: 1.3rem,
+    header-container-height: 4rem,
+    // header-headline-weight: 500
+  ));
+  @include mat.dialog-overrides((
+    container-color: rgb(17, 17, 17),
+    subhead-color: var(--color-u-orange),
+    subhead-size: 2rem
+  ));
 }
 
 body {

@@ -12,6 +12,7 @@ export class EmployeeService {
   getEmployees() {
     const url = this.baseUrl + "api/employees";
     return this.http.get(url);
+    // return this.http.get<Employee[]>(url);
   }
 
   createEmployee(employee: Employee) {
