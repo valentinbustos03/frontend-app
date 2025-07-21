@@ -1,0 +1,40 @@
+<h2 mat-dialog-title class="text-u-orange">Edit Employee</h2>
+<mat-dialog-content>
+  <div class=" min-h-fit text-white flex flex-col items-center">
+    <main class="flex-grow flex items-center justify-center w-full">
+      <div class="p-6 rounded-lg shadow-lg w-96">
+        <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()">
+          <mat-form-field appearance="fill" class="w-full mb-4">
+            <mat-label>Tax Id</mat-label>
+            <input matInput formControlName="taxId">
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="w-full mb-4">
+            <mat-label>Company Name</mat-label>
+            <input matInput formControlName="companyName">
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="w-full mb-4">
+            <mat-label>Shift</mat-label>
+            <input matInput formControlName="shift">
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="w-full mb-4">
+            <mat-label>Worked Hours</mat-label>
+            <input matInput type="number" formControlName="workedHours">
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="w-full mb-4">
+            <mat-label>Price Hour</mat-label>
+            <input matInput type="number" formControlName="priceHour">
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="w-full mb-4">
+            <mat-label>Salary</mat-label>
+            <input matInput type="number" formControlName="salary" readonly>
+          </mat-form-field>
+          <!-- <button mat-raised-button color="primary" class="w-full" [disabled]="!employeeForm.valid">Guardar</button> -->
+        </form>
+      </div>
+    </main>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button matButton (click)="onCancel()">Cancel</button>
+  <button matButton="filled" cdkFocusInitial (click)="onSubmit()" [disabled]="!employeeForm.valid">Save</button>
+</mat-dialog-actions>

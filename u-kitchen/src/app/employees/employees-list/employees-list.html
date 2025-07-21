@@ -1,0 +1,50 @@
+<div ngSkipHydration class="min-h-screen text-indigo-400 flex flex-col">
+  <main class="flex-grow flex justify-center w-full p-6">
+    <div class="card-bg p-6 rounded-lg shadow-lg w-full max-w-10/12 h-fit">
+      <div class="mb-4 flex flex-row items-center justify-between u-orange-text">
+        <h2 class="text-4xl font-semibold ">Employees</h2>
+        <button matButton="filled" class="u-orange-button" (click)="onCreate()">New
+          Employee</button>
+      </div>
+      <table mat-table [dataSource]="dataSource" class="w-full">
+        <ng-container matColumnDef="taxId">
+          <th mat-header-cell *matHeaderCellDef>Tax Id</th>
+          <td mat-cell *matCellDef="let element">{{ element.taxId }}</td>
+        </ng-container>
+        <ng-container matColumnDef="companyName">
+          <th mat-header-cell *matHeaderCellDef>Company Name</th>
+          <td mat-cell *matCellDef="let element">{{ element.companyName }}</td>
+        </ng-container>
+        <ng-container matColumnDef="shift">
+          <th mat-header-cell *matHeaderCellDef>Shift</th>
+          <td mat-cell *matCellDef="let element">{{ element.shift }}</td>
+        </ng-container>
+        <ng-container matColumnDef="workedHours">
+          <th mat-header-cell *matHeaderCellDef>Worked Hours</th>
+          <td mat-cell *matCellDef="let element">{{ element.workedHours }}</td>
+        </ng-container>
+        <ng-container matColumnDef="priceHour">
+          <th mat-header-cell *matHeaderCellDef>Price Hour</th>
+          <td mat-cell *matCellDef="let element">${{ element.priceHour }}</td>
+        </ng-container>
+        <ng-container matColumnDef="salary">
+          <th mat-header-cell *matHeaderCellDef>Salary</th>
+          <td mat-cell *matCellDef="let element">${{ element.salary }}</td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let element">
+            <button matIconButton (click)="onEdit(element)" aria-label="Edit">
+              <mat-icon matTooltip="Edit employee" class="edit">edit</mat-icon>
+            </button>
+            <button matIconButton (click)="onDelete(element)" aria-label="Delete">
+              <mat-icon matTooltip="Delete employee" class="delete">delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+  </main>
+</div>
