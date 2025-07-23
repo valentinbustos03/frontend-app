@@ -9,6 +9,7 @@ import { EditEmployee } from '../edit-employee/edit-employee.js';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { EmployeeService } from '../employee.service';
+import { DeleteModal } from '../../shared/delete-modal/delete-modal.js';
 @Component({
   selector: 'app-employees-list',
   imports: [MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule],
@@ -66,6 +67,7 @@ export class EmployeesList implements OnInit {
   // Placeholder para borrar employee
   onDelete(employee: Employee) {
     console.log('Borrar employee', employee);
+    this.openDeleteDialog(employee)
     // Futura implementación: this.http.delete(`api/employees/${employee.id}`).subscribe(() => this.loadEmployees());
   }
 
@@ -74,6 +76,25 @@ export class EmployeesList implements OnInit {
     const dialogRef = this.dialog.open(EditEmployee, {
       data: { employee: employee },
       height: 'fit-content',
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      if (result !== undefined) {
+        console.log("result: ", result);
+      }
+    });
+  }
+
+  openDeleteDialog(employee: Employee) {
+    const dialogRef = this.dialog.open(DeleteModal, {
+      data: {
+        text: `Are you sure you want to delete the employee ${employee.taxId}?`,
+        name: 'Employee',
+        delete: () => { console.log('borrar empleado: ', employee.taxId); return this.employeeService.deleteEmployee(employee.taxId) },
+      },
+      height: 'fit-content',
+      width: "fit-content",
     });
 
     dialogRef.afterClosed().subscribe(result => {

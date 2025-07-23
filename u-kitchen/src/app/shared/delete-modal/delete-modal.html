@@ -1,0 +1,12 @@
+<h2 mat-dialog-title class="text-u-orange">Delete {{name}}</h2>
+<mat-dialog-content>
+  <div class="min-h-fit text-white flex flex-col items-center">
+    <main class="flex-grow flex items-center justify-center w-full">
+      <span>{{text}}</span>
+    </main>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button matButton (click)="onCancel()">Cancel</button>
+  <button class="" matButton="filled" cdkFocusInitial (click)="onDelete()">Delete</button>
+</mat-dialog-actions>
