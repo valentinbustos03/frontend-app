@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react"
 import { Users, DollarSign, Clock, TrendingUp } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { employeeService } from "@/services/employee-service"
-import { EmployeeStatus } from "@/types/employee"
+import { empleadoService } from "@/services/empleado-service"
 
 interface DashboardStats {
   totalEmployees: number
@@ -28,17 +27,17 @@ export default function DashboardPage() {
 
   const loadDashboardData = async () => {
     try {
-      const response = await employeeService.getEmployees()
+      const response = await empleadoService.getEmpleados()
       const employees = response.data
 
       const totalEmployees = employees.length
-      const activeEmployees = employees.filter((emp) => emp.status === EmployeeStatus.ACTIVE).length
-      const averageSalary = employees.reduce((sum, emp) => sum + emp.salary, 0) / totalEmployees
+      const activeEmployees = employees.length
+      const averageSalary = employees.reduce((sum, emp) => sum + emp.sueldo, 0) / totalEmployees
 
       const currentMonth = new Date().getMonth()
       const currentYear = new Date().getFullYear()
       const newHiresThisMonth = employees.filter((emp) => {
-        const hireDate = new Date(emp.hireDate)
+        const hireDate = new Date(emp.createdAt)
         return hireDate.getMonth() === currentMonth && hireDate.getFullYear() === currentYear
       }).length
 

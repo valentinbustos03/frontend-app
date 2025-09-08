@@ -310,6 +310,7 @@ export interface PedidoFilters {
 }
 
 export interface EmpleadoFilters {
+  search?: string
   turno?: Turno
   tipo?: EmpleadoTipo
   rendimiento?: "alto" | "medio" | "bajo"

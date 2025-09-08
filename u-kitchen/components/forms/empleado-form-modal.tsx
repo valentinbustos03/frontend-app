@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/hooks/use-toast"
-import { employeeService } from "@/services/employee-service"
+import { empleadoService } from "@/services/empleado-service"
 import type { Empleado, Turno,CreateEmpleadoRequest, EmpleadoTipo, ChefJerarquia } from "@/types"
 import { Turno as TurnoEnum, EmpleadoTipo as EmpleadoTipoEnum, ChefJerarquia as ChefJerarquiaEnum } from "@/types"
 import { useForm } from "react-hook-form"
@@ -83,13 +83,13 @@ export function EmpleadoFormModal({ open, onOpenChange, empleado, onSuccess }: E
       try {
         setLoading(true)
         if (empleado) {
-          await employeeService.updateEmployee(empleado.id, data)
+          await empleadoService.updateEmpleado(empleado.id, data)
           toast({
             title: "Empleado actualizado",
             description: "El empleado ha sido actualizado exitosamente",
           })
         } else {
-          await employeeService.createEmployee(data)
+          await empleadoService.createEmpleado(data)
           toast({
             title: "Empleado creado",
             description: "El empleado ha sido creado exitosamente",
