@@ -1,79 +1,38 @@
 import type { Producto, CreateProductoRequest, ProductoFilters, PaginatedResponse } from "@/types"
-import { dummyProductos, dummyIngredientes } from "@/data/dummy-data"
+import { api } from "@/lib/api"
 
 class ProductoService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || "/api"
-
   async getProductos(filters?: ProductoFilters): Promise<PaginatedResponse<Producto>> {
     try {
-      if (process.env.NODE_ENV === "development") {
-        await new Promise((resolve) => setTimeout(resolve, 500))
-
-        let filteredProductos = [...dummyProductos]
-
-        if (filters?.search) {
-          const search = filters.search.toLowerCase()
-          filteredProductos = filteredProductos.filter(
-            (producto) =>
-              producto.nombre.toLowerCase().includes(search) ||
-              producto.descripcion.toLowerCase().includes(search) ||
-              producto.cod.toLowerCase().includes(search),
-          )
-        }
-
-        if (filters?.precioMin !== undefined) {
-          filteredProductos = filteredProductos.filter((producto) => producto.precio >= filters.precioMin!)
-        }
-
-        if (filters?.precioMax !== undefined) {
-          filteredProductos = filteredProductos.filter((producto) => producto.precio <= filters.precioMax!)
-        }
-
-        if (filters?.calificacionMin !== undefined) {
-          filteredProductos = filteredProductos.filter((producto) => producto.calificacion >= filters.calificacionMin!)
-        }
-
-        return {
-          data: filteredProductos,
-          total: filteredProductos.length,
-          page: 1,
-          limit: 10,
-          totalPages: Math.ceil(filteredProductos.length / 10),
-        }
+      const params = new URLSearchParams()
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            params.append(key, value.toString())
+          }
+        })
       }
-
-      return { data: [], total: 0, page: 1, limit: 10, totalPages: 0 }
+      
+      const endpoint = `/dish/findAll${params.toString() ? `?${params.toString()}` : ''}`;
+      return await api.get<PaginatedResponse<Producto>>(endpoint);
     } catch (error) {
       console.error("Error fetching productos:", error)
       throw error
     }
   }
 
+  async getProductoById(id: string): Promise<Producto> {
+    try {
+      return await api.get<Producto>(`/dish/id/${id}`);
+    } catch (error) {
+      console.error("Error fetching producto:", error)
+      throw error
+    }
+  }
+
   async createProducto(producto: CreateProductoRequest): Promise<Producto> {
     try {
-      if (process.env.NODE_ENV === "development") {
-        await new Promise((resolve) => setTimeout(resolve, 500))
-
-        const ingredientes = dummyIngredientes.filter((i) => producto.ingredienteIds.includes(i.id))
-
-        const newProducto: Producto = {
-          id: Date.now().toString(),
-          cod: producto.cod,
-          nombre: producto.nombre,
-          descripcion: producto.descripcion,
-          imagen: producto.imagen,
-          calificacion: 0,
-          precio: producto.precio,
-          ingredientes,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }
-
-        dummyProductos.push(newProducto)
-        return newProducto
-      }
-
-      throw new Error("API not available")
+      return await api.post<Producto>('/dish/add', producto);
     } catch (error) {
       console.error("Error creating producto:", error)
       throw error
@@ -82,27 +41,7 @@ class ProductoService {
 
   async updateProducto(id: string, producto: Partial<CreateProductoRequest>): Promise<Producto> {
     try {
-      if (process.env.NODE_ENV === "development") {
-        await new Promise((resolve) => setTimeout(resolve, 500))
-        const index = dummyProductos.findIndex((p) => p.id === id)
-        if (index === -1) throw new Error("Producto not found")
-
-        const ingredientes = producto.ingredienteIds
-          ? dummyIngredientes.filter((i) => producto.ingredienteIds!.includes(i.id))
-          : dummyProductos[index].ingredientes
-
-        const updatedProducto = {
-          ...dummyProductos[index],
-          ...producto,
-          ingredientes,
-          updatedAt: new Date(),
-        }
-
-        dummyProductos[index] = updatedProducto
-        return updatedProducto
-      }
-
-      throw new Error("API not available")
+      return await api.put<Producto>(`/dish/${id}`, producto);
     } catch (error) {
       console.error("Error updating producto:", error)
       throw error
@@ -111,13 +50,7 @@ class ProductoService {
 
   async deleteProducto(id: string): Promise<void> {
     try {
-      if (process.env.NODE_ENV === "development") {
-        await new Promise((resolve) => setTimeout(resolve, 500))
-        const index = dummyProductos.findIndex((p) => p.id === id)
-        if (index === -1) throw new Error("Producto not found")
-        dummyProductos.splice(index, 1)
-        return
-      }
+      await api.delete<void>(`/dish/${id}`);
     } catch (error) {
       console.error("Error deleting producto:", error)
       throw error

@@ -52,21 +52,22 @@ export default function ClientesPage() {
     return clientes.filter((cliente) => {
       const matchesSearch =
         searchTerm === "" ||
-        cliente.usuario.nombreApellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cliente.usuario.mail.toLowerCase().includes(searchTerm.toLowerCase())
+        cliente.dni.toString().includes(searchTerm) ||
+        (cliente.user?.fullName && cliente.user.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (cliente.user?.email && cliente.user.email.toLowerCase().includes(searchTerm.toLowerCase()))
 
       const matchesPenalizacion =
         penalizacionFilter === "all" ||
         (() => {
           switch (penalizacionFilter) {
             case "ninguna":
-              return cliente.penalizacion === 0
+              return cliente.penalty === 0
             case "baja":
-              return cliente.penalizacion > 0 && cliente.penalizacion <= 2
+              return cliente.penalty > 0 && cliente.penalty <= 2
             case "media":
-              return cliente.penalizacion > 2 && cliente.penalizacion <= 5
+              return cliente.penalty > 2 && cliente.penalty <= 5
             case "alta":
-              return cliente.penalizacion > 5
+              return cliente.penalty > 5
             default:
               return true
           }
@@ -77,7 +78,7 @@ export default function ClientesPage() {
   }, [clientes, searchTerm, penalizacionFilter])
 
   const handleDeleteCliente = async (cliente: Cliente) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar a ${cliente.usuario.nombreApellido}?`)) {
+    if (confirm(`¿Estás seguro de que deseas eliminar al cliente con DNI ${cliente.dni}?`)) {
       try {
         await clienteService.deleteCliente(cliente.id)
         setClientes(clientes.filter((c) => c.id !== cliente.id))
@@ -119,15 +120,15 @@ export default function ClientesPage() {
     return colors[index]
   }
 
-  const getPenalizacionBadge = (penalizacion: number) => {
-    if (penalizacion === 0) {
+  const getPenalizacionBadge = (penalty: number) => {
+    if (penalty === 0) {
       return <Badge className="bg-green-100 text-green-800">Sin penalización</Badge>
-    } else if (penalizacion <= 2) {
-      return <Badge className="bg-yellow-100 text-yellow-800">Baja ({penalizacion})</Badge>
-    } else if (penalizacion <= 5) {
-      return <Badge className="bg-orange-100 text-orange-800">Media ({penalizacion})</Badge>
+    } else if (penalty <= 2) {
+      return <Badge className="bg-yellow-100 text-yellow-800">Baja ({penalty})</Badge>
+    } else if (penalty <= 5) {
+      return <Badge className="bg-orange-100 text-orange-800">Media ({penalty})</Badge>
     } else {
-      return <Badge className="bg-red-100 text-red-800">Alta ({penalizacion})</Badge>
+      return <Badge className="bg-red-100 text-red-800">Alta ({penalty})</Badge>
     }
   }
 
@@ -220,19 +221,19 @@ export default function ClientesPage() {
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold">{clientes.filter((c) => c.penalizacion === 0).length}</div>
+            <div className="text-2xl font-bold">{clientes.filter((c) => c.penalty === 0).length}</div>
             <p className="text-xs text-muted-foreground">Sin Penalización</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold">{clientes.filter((c) => c.penalizacion > 0).length}</div>
+            <div className="text-2xl font-bold">{clientes.filter((c) => c.penalty > 0).length}</div>
             <p className="text-xs text-muted-foreground">Con Penalización</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold">{clientes.reduce((sum, c) => sum + c.historialPedidos.length, 0)}</div>
+            <div className="text-2xl font-bold">{clientes.reduce((sum, c) => sum + (c.orderHistory?.length || 0), 0)}</div>
             <p className="text-xs text-muted-foreground">Total Pedidos</p>
           </CardContent>
         </Card>
@@ -258,13 +259,15 @@ export default function ClientesPage() {
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <Avatar>
-                        <AvatarFallback className={getAvatarColor(cliente.usuario.nombreApellido)}>
-                          {getInitials(cliente.usuario.nombreApellido)}
+                        <AvatarFallback className={getAvatarColor(cliente.user?.fullName || `DNI ${cliente.dni}`)}>
+                          {getInitials(cliente.user?.fullName || `DNI ${cliente.dni}`)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium text-orange-600">{cliente.usuario.nombreApellido}</div>
-                        <div className="text-sm text-gray-500">ID: {cliente.id}</div>
+                        <div className="font-medium text-orange-600">
+                          {cliente.user?.fullName || `Cliente ${cliente.dni}`}
+                        </div>
+                        <div className="text-sm text-gray-500">DNI: {cliente.dni}</div>
                       </div>
                     </div>
                   </TableCell>
@@ -272,22 +275,22 @@ export default function ClientesPage() {
                     <div className="space-y-1">
                       <div className="flex items-center text-sm">
                         <Mail className="mr-2 h-3 w-3 text-gray-400" />
-                        {cliente.usuario.mail}
+                        {cliente.user?.email || 'Sin email'}
                       </div>
                       <div className="flex items-center text-sm">
                         <Phone className="mr-2 h-3 w-3 text-gray-400" />
-                        {cliente.usuario.tel}
+                        {cliente.user?.phoneNumber || 'Sin teléfono'}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-center">
-                      <div className="text-lg font-semibold">{cliente.historialPedidos.length}</div>
+                      <div className="text-lg font-semibold">{cliente.orderHistory?.length || 0}</div>
                       <div className="text-xs text-gray-500">pedidos</div>
                     </div>
                   </TableCell>
-                  <TableCell>{getPenalizacionBadge(cliente.penalizacion)}</TableCell>
-                  <TableCell>{new Date(cliente.createdAt).toLocaleDateString("es-ES")}</TableCell>
+                  <TableCell>{getPenalizacionBadge(cliente.penalty)}</TableCell>
+                  <TableCell>{/*new Date(cliente.createdAt).toLocaleDateString("es-ES")*/}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

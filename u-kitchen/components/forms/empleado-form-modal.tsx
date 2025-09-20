@@ -1,7 +1,5 @@
 "use client"
-
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,102 +15,101 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/hooks/use-toast"
 import { empleadoService } from "@/services/empleado-service"
-import type { Empleado, Turno,CreateEmpleadoRequest, EmpleadoTipo, ChefJerarquia } from "@/types"
-import { Turno as TurnoEnum, EmpleadoTipo as EmpleadoTipoEnum, ChefJerarquia as ChefJerarquiaEnum } from "@/types"
-import { useForm } from "react-hook-form"
+import { Empleado, CreateEmpleadoRequest, EmployeeRole, EmployeeShift } from "@/types"
+import { EmployeeRole as EmployeeRoleEnum, EmployeeShift as ShiftEnum } from "@/types"
+import { useForm, Controller } from "react-hook-form"
 
 interface EmpleadoFormModalProps {
   open: boolean
-    onOpenChange: (open: boolean) => void
-    empleado?: Empleado
-    onSuccess: () => void
+  onOpenChange: (open: boolean) => void
+  empleado?: Empleado
+  onSuccess: () => void
 }
 
 export function EmpleadoFormModal({ open, onOpenChange, empleado, onSuccess }: EmpleadoFormModalProps) {
-
-  const [formData, setFormData] = useState<CreateEmpleadoRequest>({
-    nombre: "",
-    apellido: "",
-    cuitCuil: "",
-    turno: TurnoEnum.MAÑANA,
-    horasTrabajadas: 0,
-    precioPorHora: 0,
-    tipo: EmpleadoTipoEnum.MESERO,
-  })
   const [loading, setLoading] = useState(false)
-  const [calculatedSueldo, setCalculatedSueldo] = useState(0)
-  const {
-      register,
-      handleSubmit,
-      reset,
-      formState: { errors },
-    } = useForm<CreateEmpleadoRequest>({
-      defaultValues: {},
-    })
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm<CreateEmpleadoRequest>({
+    defaultValues: {
+      taxId: "",
+      shift: ShiftEnum.MAÑANA,
+      workedHours: 0,
+      priceHour: 0,
+      role: EmployeeRole.WAITER,
+      hierarchy: "",
+      tag: "",
+      calification: 0,
+      sector: ""
+    },
+  })
+
+  // Watch para calcular sueldo y campos condicionales
+  const watchedValues = watch()
+  const calculatedSueldo = watchedValues.workedHours * watchedValues.priceHour || 0
+
+  // Reset del formulario cuando cambia el modal
   useEffect(() => {
     if (open) {
       reset(empleado ? {
-        nombre: empleado.nombre,
-        apellido: empleado.apellido,
-        cuitCuil: empleado.cuitCuil,
-        turno: empleado.turno,
-        horasTrabajadas: empleado.horasTrabajadas,
-        precioPorHora: empleado.precioPorHora,
-        tipo: empleado.tipo,
-        jerarquia: empleado.jerarquia,
-        calificacion: empleado.calificacion,
-        listaProductosEncargado: empleado.listaProductosEncargado,
+        taxId: empleado.taxId,
+        shift: empleado.shift,
+        workedHours: empleado.workedHours,
+        priceHour: empleado.priceHour,
+        role: empleado.role,
+        hierarchy: empleado.hierarchy,
+        tag: empleado.tag,
+        calification: empleado.calification,
+        sector: empleado.sector
       } : {
-        nombre: "",
-        apellido: "",
-        cuitCuil: "",
-        turno: TurnoEnum.MAÑANA,
-        horasTrabajadas: 0,
-        precioPorHora: 0,
-        tipo: EmpleadoTipoEnum.MESERO,
-      });
+        taxId: "",
+        shift: ShiftEnum.MAÑANA,
+        workedHours: 0,
+        priceHour: 0,
+        role: EmployeeRole.WAITER,
+        hierarchy: "",
+        tag: "",
+        calification: 0,
+        sector: ""
+      })
     }
   }, [open, empleado, reset])
 
-  useEffect(() => {
-    setCalculatedSueldo(formData.horasTrabajadas * formData.precioPorHora)
-  }, [formData.horasTrabajadas, formData.precioPorHora])
-
   const onSubmit = async (data: CreateEmpleadoRequest) => {
-      try {
-        setLoading(true)
-        if (empleado) {
-          await empleadoService.updateEmpleado(empleado.id, data)
-          toast({
-            title: "Empleado actualizado",
-            description: "El empleado ha sido actualizado exitosamente",
-          })
-        } else {
-          await empleadoService.createEmpleado(data)
-          toast({
-            title: "Empleado creado",
-            description: "El empleado ha sido creado exitosamente",
-          })
-        }
-        onSuccess()
-        onOpenChange(false)
-        reset()
-      } catch (error) {
+    try {
+      setLoading(true)
+      console.log(data)
+      if (empleado) {
+        await empleadoService.updateEmpleado(empleado.id, data)
         toast({
-          title: "Error",
-          description: `No se pudo ${empleado ? "actualizar" : "crear"} el empleado`,
-          variant: "destructive",
+          title: "Empleado actualizado",
+          description: "El empleado ha sido actualizado exitosamente",
         })
-      } finally {
-        setLoading(false)
+      } else {
+        await empleadoService.createEmpleado(data)
+        toast({
+          title: "Empleado creado",
+          description: "El empleado ha sido creado exitosamente",
+        })
       }
+      onSuccess()
+      onOpenChange(false)
+      reset()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `No se pudo ${empleado ? "actualizar" : "crear"} el empleado`,
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
     }
-
-
-
-  const handleInputChange = (field: keyof CreateEmpleadoRequest, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   return (
@@ -125,94 +122,124 @@ export function EmpleadoFormModal({ open, onOpenChange, empleado, onSuccess }: E
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="nombre">Nombre</Label>
-              <Input
-                id="nombre"
-                value={formData.nombre}
-                onChange={(e) => handleInputChange("nombre", e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="apellido">Apellido</Label>
-              <Input
-                id="apellido"
-                value={formData.apellido}
-                onChange={(e) => handleInputChange("apellido", e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <Label htmlFor="cuitCuil">CUIT/CUIL</Label>
+            <Label htmlFor="taxId">CUIT/CUIL</Label>
             <Input
-              id="cuitCuil"
-              value={formData.cuitCuil}
-              onChange={(e) => handleInputChange("cuitCuil", e.target.value)}
+              id="taxId"
+              {...register("taxId", { 
+                required: "CUIT/CUIL es requerido",
+                pattern: {
+                  value: /^\d{2}-\d{8}-\d{1}$/,
+                  message: "Formato inválido. Use: 20-12345678-9"
+                }
+              })}
               placeholder="20-12345678-9"
-              required
             />
+            {errors.taxId && <p className="text-red-500 text-sm">{errors.taxId.message}</p>}
           </div>
 
+          {/* Campos de texto tag y sector */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="turno">Turno</Label>
-              <Select value={formData.turno} onValueChange={(value) => handleInputChange("turno", value as Turno)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un turno" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={TurnoEnum.MAÑANA}>Mañana</SelectItem>
-                  <SelectItem value={TurnoEnum.TARDE}>Tarde</SelectItem>
-                  <SelectItem value={TurnoEnum.NOCHE}>Noche</SelectItem>
-                  <SelectItem value={TurnoEnum.COMPLETO}>Completo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo de Empleado</Label>
-              <Select value={formData.tipo} onValueChange={(value) => handleInputChange("tipo", value as EmpleadoTipo)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={EmpleadoTipoEnum.MESERO}>Mesero</SelectItem>
-                  <SelectItem value={EmpleadoTipoEnum.CHEF}>Chef</SelectItem>
-                  <SelectItem value={EmpleadoTipoEnum.CAJERO}>Cajero</SelectItem>
-                  <SelectItem value={EmpleadoTipoEnum.ADMINISTRADOR}>Administrador</SelectItem>
-                  <SelectItem value={EmpleadoTipoEnum.LIMPIEZA}>Limpieza</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="horasTrabajadas">Horas Trabajadas</Label>
+              <Label htmlFor="tag">Tag</Label>
               <Input
-                id="horasTrabajadas"
-                type="number"
-                value={formData.horasTrabajadas}
-                onChange={(e) => handleInputChange("horasTrabajadas", Number(e.target.value))}
-                min="0"
-                required
+                id="tag"
+                {...register("tag", { 
+                  maxLength: { 
+                    value: 50, 
+                    message: "El tag no puede tener más de 50 caracteres" 
+                  }
+                })}
+                placeholder="Etiqueta del empleado"
+              />
+              {errors.tag && <p className="text-red-500 text-sm">{errors.tag.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sector">Sector</Label>
+              <Input
+                id="sector"
+                {...register("sector", { 
+                  maxLength: { 
+                    value: 100, 
+                    message: "El sector no puede tener más de 100 caracteres" 
+                  }
+                })}
+                placeholder="Sector de trabajo"
+              />
+              {errors.sector && <p className="text-red-500 text-sm">{errors.sector.message}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="shift">Shift</Label>
+              <Controller
+                name="shift"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un shift" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ShiftEnum.MAÑANA}>Mañana</SelectItem>
+                      <SelectItem value={ShiftEnum.TARDE}>Tarde</SelectItem>
+                      <SelectItem value={ShiftEnum.NOCHE}>Noche</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="precioPorHora">Precio por Hora ($)</Label>
+              <Label htmlFor="role">Tipo de Empleado</Label>
+              <Controller
+                name="role"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={EmployeeRoleEnum.WAITER}>Mesero</SelectItem>
+                      <SelectItem value={EmployeeRoleEnum.CHEF}>Chef</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="workedHours">Horas Trabajadas</Label>
               <Input
-                id="precioPorHora"
+                id="workedHours"
+                type="number"
+                {...register("workedHours", { 
+                  required: "Horas trabajadas son requeridas",
+                  min: { value: 0, message: "Debe ser mayor o igual a 0" },
+                  valueAsNumber: true
+                })}
+                min="0"
+              />
+              {errors.workedHours && <p className="text-red-500 text-sm">{errors.workedHours.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="priceHour">Precio por Hora ($)</Label>
+              <Input
+                id="priceHour"
                 type="number"
                 step="0.01"
-                value={formData.precioPorHora}
-                onChange={(e) => handleInputChange("precioPorHora", Number(e.target.value))}
+                {...register("priceHour", { 
+                  required: "Precio por hora es requerido",
+                  min: { value: 0, message: "Debe ser mayor o igual a 0" },
+                  valueAsNumber: true
+                })}
                 min="0"
-                required
               />
+              {errors.priceHour && <p className="text-red-500 text-sm">{errors.priceHour.message}</p>}
             </div>
           </div>
 
@@ -220,43 +247,53 @@ export function EmpleadoFormModal({ open, onOpenChange, empleado, onSuccess }: E
             <Label className="text-sm font-medium">Sueldo Calculado</Label>
             <p className="text-2xl font-bold text-primary">${calculatedSueldo.toFixed(2)}</p>
             <p className="text-sm text-muted-foreground">
-              {formData.horasTrabajadas} horas × ${formData.precioPorHora}/hora
+              {watchedValues.workedHours || 0} horas × ${(watchedValues.priceHour || 0).toFixed(2)}/hora
             </p>
           </div>
 
-          {formData.tipo === EmpleadoTipoEnum.CHEF && (
+          {/* Campo condicional para Chef */}
+          {watchedValues.role === EmployeeRoleEnum.CHEF && (
             <div className="space-y-2">
-              <Label htmlFor="jerarquia">Jerarquía</Label>
-              <Select
-                value={formData.jerarquia || ""}
-                onValueChange={(value) => handleInputChange("jerarquia", value as ChefJerarquia)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona una jerarquía" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ChefJerarquiaEnum.CHEF_EJECUTIVO}>Chef Ejecutivo</SelectItem>
-                  <SelectItem value={ChefJerarquiaEnum.SOUS_CHEF}>Sous Chef</SelectItem>
-                  <SelectItem value={ChefJerarquiaEnum.CHEF_DE_PARTIDA}>Chef de Partida</SelectItem>
-                  <SelectItem value={ChefJerarquiaEnum.COCINERO}>Cocinero</SelectItem>
-                  <SelectItem value={ChefJerarquiaEnum.AYUDANTE_COCINA}>Ayudante de Cocina</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="hierarchy">Jerarquía</Label>
+              <Controller
+                name="hierarchy"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona una jerarquía" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Chef Ejecutivo">Chef Ejecutivo</SelectItem>
+                      <SelectItem value="Sous Chef">Sous Chef</SelectItem>
+                      <SelectItem value="Chef de Partida">Chef de Partida</SelectItem>
+                      <SelectItem value="Cocinero">Cocinero</SelectItem>
+                      <SelectItem value="Ayudante de Cocina">Ayudante de Cocina</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.hierarchy && <p className="text-red-500 text-sm">{errors.hierarchy.message}</p>}
             </div>
           )}
 
-          {formData.tipo === EmpleadoTipoEnum.MESERO && (
+          {/* Campo condicional para Waiter */}
+          {watchedValues.role === EmployeeRoleEnum.WAITER && (
             <div className="space-y-2">
-              <Label htmlFor="calificacion">Calificación (1-5)</Label>
+              <Label htmlFor="calification">Calificación (1-5)</Label>
               <Input
-                id="calificacion"
+                id="calification"
                 type="number"
                 step="0.1"
                 min="1"
                 max="5"
-                value={formData.calificacion || ""}
-                onChange={(e) => handleInputChange("calificacion", Number(e.target.value))}
+                {...register("calification", { 
+                  min: { value: 1, message: "Mínimo 1" },
+                  max: { value: 5, message: "Máximo 5" },
+                  valueAsNumber: true
+                })}
               />
+              {errors.calification && <p className="text-red-500 text-sm">{errors.calification.message}</p>}
             </div>
           )}
 

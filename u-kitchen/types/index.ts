@@ -1,250 +1,211 @@
 // ============= USUARIO =============
 export interface Usuario {
   id: string
-  mail: string
-  contraseña: string
-  tel: string
-  nombreApellido: string
-  rol: UserRole
-  estado: UserStatus
-  fotoPerfil?: string
-  createdAt: Date
-  updatedAt: Date
+  email: string
+  fullName: string
+  password: string
+  phoneNumber: string
+  role: UserRole
+  profilePicture?: string
+  client?: Cliente
+  employee?: Empleado
 }
 
 export enum UserRole {
-  ADMIN = "ADMIN",
-  CLIENTE = "CLIENTE",
-  EMPLEADO = "EMPLEADO",
-  MESERO = "MESERO",
-  CHEF = "CHEF",
-}
-
-export enum UserStatus {
-  ACTIVO = "ACTIVO",
-  INACTIVO = "INACTIVO",
-  SUSPENDIDO = "SUSPENDIDO",
+  ADMIN = "admin",
+  USER = "user",
 }
 
 // ============= CLIENTE =============
 export interface Cliente {
   id: string
-  usuario: Usuario
-  historialPedidos: Pedido[]
-  penalizacion: number
-  createdAt: Date
-  updatedAt: Date
+  dni: number
+  penalty: number
+  orderHistory: Pedido[]
+  user?: Usuario
 }
 
 export interface CreateClienteRequest {
-  mail: string
-  contraseña: string
-  tel: string
-  nombreApellido: string
-  penalizacion?: number
+  dni: number
+  penalty?: number
 }
 
 // ============= EMPLEADO =============
 export interface Empleado {
   id: string
-  nombre: string
-  apellido: string
-  cuitCuil: string
-  turno: Turno
-  horasTrabajadas: number
-  precioPorHora: number
-  sueldo: number // calculado: horasTrabajadas * precioPorHora
-  tipo: EmpleadoTipo
-  // Campos específicos para Mesero
-  calificacion?: number
+  taxId: string
+  shift: string
+  workedHours: number
+  priceHour: number
+  salary?: number
+  role: EmployeeRole
+  user?: Usuario
   // Campos específicos para Chef
-  jerarquia?: ChefJerarquia
-  listaProductosEncargado?: string[]
-  createdAt: Date
-  updatedAt: Date
+  hierarchy?: string
+  tag?: string
+  dishes?: Producto[]
+  // Campos específicos para Waiter
+  calification?: number
+  sector?: string
 }
 
-export enum Turno {
-  MAÑANA = "MAÑANA",
-  TARDE = "TARDE",
-  NOCHE = "NOCHE",
-  COMPLETO = "COMPLETO",
+export enum EmployeeRole {
+  CHEF = "chef",
+  WAITER = "waiter",
 }
 
-export enum EmpleadoTipo {
-  MESERO = "MESERO",
-  CHEF = "CHEF",
-  CAJERO = "CAJERO",
-  ADMINISTRADOR = "ADMINISTRADOR",
-  LIMPIEZA = "LIMPIEZA",
-}
-
-export enum ChefJerarquia {
-  CHEF_EJECUTIVO = "CHEF_EJECUTIVO",
-  SOUS_CHEF = "SOUS_CHEF",
-  CHEF_DE_PARTIDA = "CHEF_DE_PARTIDA",
-  COCINERO = "COCINERO",
-  AYUDANTE_COCINA = "AYUDANTE_COCINA",
+export enum EmployeeShift {
+  MAÑANA = "mañana",
+  TARDE = "tarde",
+  NOCHE = "noche"
 }
 
 export interface CreateEmpleadoRequest {
-  nombre: string
-  apellido: string
-  cuitCuil: string
-  turno: Turno
-  horasTrabajadas: number
-  precioPorHora: number
-  tipo: EmpleadoTipo
-  jerarquia?: ChefJerarquia
-  calificacion?: number
-  listaProductosEncargado?: string[]
+  taxId: string
+  shift: string
+  workedHours: number
+  priceHour: number
+  salary?: number
+  role: EmployeeRole
+  // Campos específicos para Chef
+  hierarchy?: string
+  tag?: string
+  // Campos específicos para Waiter
+  calification?: number
+  sector?: string
 }
 
 // ============= PROVEEDOR =============
 export interface Proveedor {
   id: string
-  razonSocial: string
-  cuitCuil: string
+  companyName: string
+  taxId: string
   mail: string
-  telefono: string
-  tipoIngrediente: string
-  nombre: string
-  compania: string
-  createdAt: Date
-  updatedAt: Date
+  phoneNumber: string
+  typeIngredient: string
+  fullName: string
+  bussinessName: string
+  ingredients: Ingrediente[]
 }
 
 export interface CreateProveedorRequest {
-  razonSocial: string
-  cuitCuil: string
+  companyName: string
+  taxId: string
   mail: string
-  telefono: string
-  tipoIngrediente: string
-  nombre: string
-  compania: string
+  phoneNumber: string
+  typeIngredient: string
+  fullName: string
+  bussinessName: string
 }
 
 // ============= MESA =============
 export interface Mesa {
   id: string
   cod: string
-  capacidad: number
-  ocupada: boolean
-  descripcion?: string
-  createdAt: Date
-  updatedAt: Date
+  capacity: number
+  description?: string
+  occupied: boolean
+  sector: string
+  order: Pedido[]
 }
 
 export interface CreateMesaRequest {
   cod: string
-  capacidad: number
-  descripcion?: string
+  capacity: number
+  description?: string
+  sector: string
 }
 
 // ============= INGREDIENTE =============
 export interface Ingrediente {
   id: string
-  codigo: string
-  nombre: string
-  descripcion: string
+  cod: string
+  name: string
+  description?: string
   stock: number
-  unidad: UnidadMedida
-  proveedores: Proveedor[]
-  origen: string
-  limiteBajoStock: number
-  createdAt: Date
-  updatedAt: Date
-}
-
-export enum UnidadMedida {
-  KILOGRAMOS = "KILOGRAMOS",
-  GRAMOS = "GRAMOS",
-  LITROS = "LITROS",
-  MILILITROS = "MILILITROS",
-  UNIDADES = "UNIDADES",
-  PIEZAS = "PIEZAS",
+  uniteOfMeasure: string
+  origin: string
+  stockLimit: number
+  suppliers: Proveedor[]
+  dishes: Producto[]
 }
 
 export interface CreateIngredienteRequest {
-  codigo: string
-  nombre: string
-  descripcion: string
+  cod: string
+  name: string
+  description?: string
   stock: number
-  proveedorIds: string[]
-  unidad: UnidadMedida
-  origen: string
-  limiteBajoStock: number
+  uniteOfMeasure: string
+  origin: string
+  stockLimit: number
+  supplierIds: string[]
 }
 
 // ============= PRODUCTO =============
 export interface Producto {
   id: string
-  codigo: string
-  nombre: string
-  descripcion: string
-  imagen?: string
-  calificacion: number
-  precio: number
-  ingredientes: Ingrediente[]
-  createdAt: Date
-  updatedAt: Date
+  cod: string
+  name: string
+  description?: string
+  picture?: string
+  price: number
+  calification?: number
+  tag: string
+  ingredients: Ingrediente[]
+  chef: Empleado
 }
 
 export interface CreateProductoRequest {
-  codigo: string
-  nombre: string
-  descripcion: string
-  imagen?: string
-  precio: number
-  ingredienteIds: string[]
+  cod: string
+  name: string
+  description?: string
+  picture?: string
+  price: number
+  calification?: number
+  tag: string
+  ingredientIds: string[]
+  chefId: string
 }
 
 // ============= PEDIDO =============
 export interface Pedido {
-  id: string
-  cliente: Cliente
-  mesa?: Mesa
-  mesero?: Empleado
-  descripcion: string
-  estado: PedidoEstado
-  fechaHoraInicio: Date
-  fechaHoraFin?: Date
-  fechaHoraFinEstimada: Date
+  orderId: string
+  description?: string
+  status: PedidoEstado
+  startTime: Date
+  estimatedEndTime: Date
+  endTime: Date
   subtotal: number
-  total: number // calculado: suma de productos * cantidad + impuestos/descuentos
-  productos: PedidoProducto[]
-  reserva?: Reserva
-  factura?: Factura
-  createdAt: Date
-  updatedAt: Date
+  orderItems: PedidoProducto[]
+  client: Cliente
+  table: Mesa
+  bill?: Factura
 }
 
 export interface PedidoProducto {
-  producto: Producto
-  cantidad: number
-  precioUnitario: number
-  subtotal: number
+  orderItemId: string
+  dish: Producto
+  quantity: number
 }
 
 export enum PedidoEstado {
-  PENDIENTE = "PENDIENTE",
-  EN_PREPARACION = "EN_PREPARACION",
-  LISTO = "LISTO",
-  ENTREGADO = "ENTREGADO",
-  CANCELADO = "CANCELADO",
+  PENDIENTE = "pendiente",
+  EN_PREPARACION = "en preparacion",
+  LISTO = "listo",
+  ENTREGADO = "entregado",
+  CANCELADO = "cancelado",
+  RECHAZADO = "rechazado",
 }
 
 export interface CreatePedidoRequest {
-  clienteId: string
-  mesaId?: string
-  meseroId?: string
-  descripcion: string
-  fechaHoraFinEstimada: Date
-  productos: {
-    productoId: string
-    cantidad: number
+  description?: string
+  estimatedEndTime: Date
+  clientId: string
+  tableId: string
+  orderItems: {
+    dishId: string
+    quantity: number
   }[]
-  reservaId?: string
 }
 
 // ============= RESERVA =============
@@ -282,21 +243,10 @@ export interface CreateReservaRequest {
 
 // ============= FACTURA =============
 export interface Factura {
-  id: string
-  pedido: Pedido
-  metodoPago: MetodoPago
-  fechaHoraEmision: Date
-  total: number
+  billId: string
   createdAt: Date
-  updatedAt: Date
-}
-
-export enum MetodoPago {
-  EFECTIVO = "EFECTIVO",
-  TARJETA_CREDITO = "TARJETA_CREDITO",
-  TARJETA_DEBITO = "TARJETA_DEBITO",
-  TRANSFERENCIA = "TRANSFERENCIA",
-  MERCADO_PAGO = "MERCADO_PAGO",
+  paymentMethod: string
+  order: Pedido
 }
 
 // ============= FILTROS =============
@@ -305,45 +255,45 @@ export interface PedidoFilters {
   fechaHasta?: Date
   estado?: PedidoEstado
   clienteId?: string
-  meseroId?: string
   mesaId?: string
 }
 
 export interface EmpleadoFilters {
   search?: string
-  turno?: Turno
-  tipo?: EmpleadoTipo
+  shift?: string
+  role?: EmployeeRole
   rendimiento?: "alto" | "medio" | "bajo"
-  estado?: UserStatus
 }
 
 export interface ClienteFilters {
   search?: string
-  penalizacion?: "alta" | "media" | "baja" | "ninguna"
+  penalty?: "alta" | "media" | "baja" | "ninguna"
 }
 
 export interface ProveedorFilters {
   search?: string
-  tipoIngrediente?: string
+  typeIngredient?: string
 }
 
 export interface MesaFilters {
-  capacidad?: number
-  ocupada?: boolean
+  capacity?: number
+  occupied?: boolean
+  sector?: string
 }
 
 export interface IngredienteFilters {
   search?: string
   stockBajo?: boolean
   proveedor?: string
-  unidad?: UnidadMedida
+  uniteOfMeasure?: string
 }
 
 export interface ProductoFilters {
   search?: string
   precioMin?: number
   precioMax?: number
-  calificacionMin?: number
+  calificationMin?: number
+  tag?: string
 }
 
 // ============= RESPONSES =============

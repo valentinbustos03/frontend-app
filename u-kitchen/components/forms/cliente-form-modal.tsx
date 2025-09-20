@@ -39,10 +39,8 @@ export function ClienteFormModal({ open, onOpenChange, cliente, onSuccess }: Cli
   useEffect(() => {
     if (open) {
       reset(cliente ? {
-        mail: cliente.usuario.mail,
-        tel: cliente.usuario.tel,
-        nombreApellido: cliente.usuario.nombreApellido,
-        penalizacion: cliente.penalizacion,
+        dni: cliente.dni,
+        penalty: cliente.penalty,
       } : {});
     }
   }, [open, cliente, reset])
@@ -88,54 +86,31 @@ export function ClienteFormModal({ open, onOpenChange, cliente, onSuccess }: Cli
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="nombreApellido">Nombre y Apellido</Label>
+            <Label htmlFor="dni">DNI</Label>
             <Input
-              id="nombreApellido"
-              {...register("nombreApellido", { required: "El nombre es requerido" })}
-              placeholder="Juan Pérez"
+              id="dni"
+              type="number"
+              {...register("dni", { required: "El DNI es requerido", valueAsNumber: true })}
+              placeholder="12345678"
             />
-            {errors.nombreApellido && <p className="text-sm text-destructive">{errors.nombreApellido.message}</p>}
+            {errors.dni && <p className="text-sm text-destructive">{errors.dni.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="mail">Email</Label>
+            <Label htmlFor="penalty">Penalización</Label>
             <Input
-              id="mail"
-              type="email"
-              {...register("mail", { required: "El email es requerido" })}
-              placeholder="juan@email.com"
-            />
-            {errors.mail && <p className="text-sm text-destructive">{errors.mail.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tel">Teléfono</Label>
-            <Input id="tel" {...register("tel", { required: "El teléfono es requerido" })} placeholder="+1234567890" />
-            {errors.tel && <p className="text-sm text-destructive">{errors.tel.message}</p>}
-          </div>
-
-          {!cliente && (
-            <div className="space-y-2">
-              <Label htmlFor="contraseña">Contraseña</Label>
-              <Input
-                id="contraseña"
-                type="password"
-                {...register("contraseña", { required: "La contraseña es requerida" })}
-                placeholder="••••••••"
-              />
-              {errors.contraseña && <p className="text-sm text-destructive">{errors.contraseña.message}</p>}
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="penalizacion">Penalización</Label>
-            <Input
-              id="penalizacion"
+              id="penalty"
               type="number"
               min="0"
-              {...register("penalizacion", { valueAsNumber: true })}
+              {...register("penalty", { valueAsNumber: true })}
               placeholder="0"
             />
+            {errors.penalty && <p className="text-sm text-destructive">{errors.penalty.message}</p>}
+          </div>
+
+          {/* TODO: Implementar campos de usuario cuando estén disponibles en el backend */}
+          <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-md">
+            <p><strong>Nota:</strong> Los campos de usuario (nombre, email, teléfono) se implementarán cuando el backend soporte la creación de usuarios asociados a clientes.</p>
           </div>
 
           <DialogFooter>
