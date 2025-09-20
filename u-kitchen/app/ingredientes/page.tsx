@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Search, Filter, MoreHorizontal, Eye, Edit, Trash2, AlertTriangle, Package } from "lucide-react"
@@ -15,25 +14,27 @@ import { ingredienteService } from "@/services/ingrediente-service"
 import { type Ingrediente, UnidadMedida } from "@/types"
 import { IngredienteFormModal } from "@/components/forms/ingrediente-form-modal"
 
-const unidadMedidaLabels = {
+const unidadMedidaLabels: { [key in UnidadMedida]: string } = {
   [UnidadMedida.KILOGRAMOS]: "kg",
   [UnidadMedida.GRAMOS]: "g",
-  [UnidadMedida.LITROS]: "L",
+  [UnidadMedida.LITROS]: "lt",
   [UnidadMedida.MILILITROS]: "ml",
   [UnidadMedida.UNIDADES]: "unidades",
   [UnidadMedida.PIEZAS]: "piezas",
+  [UnidadMedida.ONZAS]: "oz",
+  [UnidadMedida.LIBRAS]: "lb",
+  [UnidadMedida.GALONES]: "gal",
+  [UnidadMedida.CUARTOS]: "qt",
 }
 
 export default function IngredientesPage() {
   const router = useRouter()
   const { toast } = useToast()
-
   const [ingredientes, setIngredientes] = useState<Ingrediente[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [stockBajoFilter, setStockBajoFilter] = useState<string>("all")
   const [unidadMedidaFilter, setUnidadMedidaFilter] = useState<string>("all")
-
   const [modalOpen, setModalOpen] = useState(false)
   const [editingIngrediente, setEditingIngrediente] = useState<Ingrediente | undefined>()
 
@@ -61,23 +62,20 @@ export default function IngredientesPage() {
     return ingredientes.filter((ingrediente) => {
       const matchesSearch =
         searchTerm === "" ||
-        ingrediente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ingrediente.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ingrediente.codigo.toLowerCase().includes(searchTerm.toLowerCase())
-
+        ingrediente.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ingrediente.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ingrediente.cod.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesStockBajo =
         stockBajoFilter === "all" ||
-        (stockBajoFilter === "bajo" && ingrediente.stock <= ingrediente.limiteBajoStock) ||
-        (stockBajoFilter === "normal" && ingrediente.stock > ingrediente.limiteBajoStock)
-
-      const matchesUnidadMedida = unidadMedidaFilter === "all" || ingrediente.unidad === unidadMedidaFilter
-
+        (stockBajoFilter === "bajo" && ingrediente.stock <= ingrediente.stockLimit) ||
+        (stockBajoFilter === "normal" && ingrediente.stock > ingrediente.stockLimit)
+      const matchesUnidadMedida = unidadMedidaFilter === "all" || ingrediente.uniteOfMeasure === unidadMedidaFilter
       return matchesSearch && matchesStockBajo && matchesUnidadMedida
     })
   }, [ingredientes, searchTerm, stockBajoFilter, unidadMedidaFilter])
 
   const handleDeleteIngrediente = async (ingrediente: Ingrediente) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar ${ingrediente.nombre}?`)) {
+    if (confirm(`¿Estás seguro de que deseas eliminar ${ingrediente.name}?`)) {
       try {
         await ingredienteService.deleteIngrediente(ingrediente.id)
         setIngredientes(ingredientes.filter((i) => i.id !== ingrediente.id))
@@ -101,7 +99,7 @@ export default function IngredientesPage() {
       setIngredientes(ingredientes.map((i) => (i.id === ingrediente.id ? updatedIngrediente : i)))
       toast({
         title: "Stock actualizado",
-        description: `Stock de ${ingrediente.nombre} actualizado a ${nuevoStock}`,
+        description: `Stock de ${ingrediente.name} actualizado a ${nuevoStock}`,
       })
     } catch (error) {
       toast({
@@ -113,7 +111,7 @@ export default function IngredientesPage() {
   }
 
   const getStockBadge = (ingrediente: Ingrediente) => {
-    if (ingrediente.stock <= ingrediente.limiteBajoStock) {
+    if (ingrediente.stock <= ingrediente.stockLimit) {
       return (
         <Badge className="bg-red-100 text-red-800">
           <AlertTriangle className="mr-1 h-3 w-3" />
@@ -166,7 +164,6 @@ export default function IngredientesPage() {
           Nuevo Ingrediente
         </Button>
       </div>
-
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -186,7 +183,6 @@ export default function IngredientesPage() {
                 className="pl-10"
               />
             </div>
-
             <Select value={stockBajoFilter} onValueChange={setStockBajoFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Estado del Stock" />
@@ -197,15 +193,14 @@ export default function IngredientesPage() {
                 <SelectItem value="normal">Stock normal</SelectItem>
               </SelectContent>
             </Select>
-
             <Select value={unidadMedidaFilter} onValueChange={setUnidadMedidaFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Unidad de Medida" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas las unidades</SelectItem>
-                {Object.entries(unidadMedidaLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
+                {Object.entries(unidadMedidaLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={label}>
                     {label}
                   </SelectItem>
                 ))}
@@ -214,7 +209,6 @@ export default function IngredientesPage() {
           </div>
         </CardContent>
       </Card>
-
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -226,7 +220,7 @@ export default function IngredientesPage() {
         <Card>
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-red-600">
-              {ingredientes.filter((i) => i.stock <= i.limiteBajoStock).length}
+              {ingredientes.filter((i) => i.stock <= i.stockLimit).length}
             </div>
             <p className="text-xs text-muted-foreground">Stock Bajo</p>
           </CardContent>
@@ -234,21 +228,20 @@ export default function IngredientesPage() {
         <Card>
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-green-600">
-              {ingredientes.filter((i) => i.stock > i.limiteBajoStock).length}
+              {ingredientes.filter((i) => i.stock > i.stockLimit).length}
             </div>
             <p className="text-xs text-muted-foreground">Stock Normal</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold">
-              {ingredientes.reduce((sum, i) => sum + i.proveedores.length, 0)}
-            </div>
+            {/* <div className="text-2xl font-bold">
+              {ingredientes.reduce((sum, i) => sum + i.suppliers.length, 0)}
+            </div> */}
             <p className="text-xs text-muted-foreground">Total Proveedores</p>
           </CardContent>
         </Card>
       </div>
-
       {/* Table */}
       <Card>
         <CardContent className="p-0">
@@ -273,36 +266,38 @@ export default function IngredientesPage() {
                         <Package className="h-5 w-5 text-green-600" />
                       </div>
                       <div>
-                        <div className="font-medium text-orange-600">{ingrediente.nombre}</div>
-                        <div className="text-sm text-gray-500">{ingrediente.codigo}</div>
+                        <div className="font-medium text-orange-600">{ingrediente.name}</div>
+                        <div className="text-sm text-gray-500">{ingrediente.cod}</div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-center">
                       <div className="text-lg font-semibold">{ingrediente.stock}</div>
-                      <div className="text-xs text-gray-500">Límite: {ingrediente.limiteBajoStock}</div>
+                      <div className="text-xs text-gray-500">Límite: {ingrediente.stockLimit}</div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{unidadMedidaLabels[ingrediente.unidad]}</Badge>
+                    <Badge variant="outline">{ingrediente.uniteOfMeasure}</Badge>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      {ingrediente.proveedores.length > 0 ? (
+                      {/* {ingrediente.suppliers.length > 0 ? (
                         <div>
-                          <div className="font-medium">{ingrediente.proveedores[0].nombre}</div>
-                          {ingrediente.proveedores.length > 1 && (
-                            <div className="text-gray-500">+{ingrediente.proveedores.length - 1} más</div>
+                          <div className="font-medium">{ingrediente.suppliers[0].companyName}</div>
+                          {ingrediente.suppliers.length > 1 && (
+                            <div className="text-gray-500">+{ingrediente.suppliers.length - 1} más</div>
                           )}
                         </div>
                       ) : (
+                        <span className="text-gray-400">Sin proveedores</span> 
+                      )} */}
                         <span className="text-gray-400">Sin proveedores</span>
-                      )}
+
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">{ingrediente.origen}</div>
+                    <div className="text-sm">{ingrediente.origin}</div>
                   </TableCell>
                   <TableCell>{getStockBadge(ingrediente)}</TableCell>
                   <TableCell>
@@ -348,7 +343,6 @@ export default function IngredientesPage() {
               ))}
             </TableBody>
           </Table>
-
           {filteredIngredientes.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500">No se encontraron ingredientes</p>

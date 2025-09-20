@@ -123,7 +123,7 @@ export interface Ingrediente {
   name: string
   description?: string
   stock: number
-  uniteOfMeasure: string
+  uniteOfMeasure: UnidadMedida
   origin: string
   stockLimit: number
   suppliers: Proveedor[]
@@ -135,10 +135,23 @@ export interface CreateIngredienteRequest {
   name: string
   description?: string
   stock: number
-  uniteOfMeasure: string
+  uniteOfMeasure: UnidadMedida
   origin: string
   stockLimit: number
-  supplierIds: string[]
+  suppliers: string[]
+}
+
+export enum UnidadMedida {
+  KILOGRAMOS = "kg",
+  GRAMOS = "g",
+  LITROS = "L",
+  MILILITROS = "ml",
+  UNIDADES = "unidades",
+  PIEZAS = "piezas",
+  ONZAS = "oz",
+  LIBRAS = "lb",
+  GALONES = "gal",
+  CUARTOS = "qt",
 }
 
 // ============= PRODUCTO =============
