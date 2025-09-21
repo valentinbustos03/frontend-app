@@ -51,9 +51,9 @@ const menuItems = [
     href: "/ingredientes",
   },
   {
-    label: "Productos",
+    label: "Platos",
     icon: MenuIcon,
-    href: "/productos",
+    href: "/platos",
   },
   {
     label: "Pedidos",

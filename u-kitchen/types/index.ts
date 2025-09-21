@@ -43,7 +43,7 @@ export interface Empleado {
   // Campos específicos para Chef
   hierarchy?: string
   tag?: string
-  dishes?: Producto[]
+  dishes?: Plato[]
   // Campos específicos para Waiter
   calification?: number
   sector?: string
@@ -127,7 +127,7 @@ export interface Ingrediente {
   origin: string
   stockLimit: number
   suppliers: Proveedor[]
-  dishes: Producto[]
+  dishes: Plato[]
 }
 
 export interface CreateIngredienteRequest {
@@ -154,30 +154,32 @@ export enum UnidadMedida {
   CUARTOS = "qt",
 }
 
-// ============= PRODUCTO =============
-export interface Producto {
+// ============= Plato =============
+export interface Plato {
   id: string
   cod: string
   name: string
   description?: string
-  picture?: string
+  picture: string | null
   price: number
   calification?: number
   tag: string
   ingredients: Ingrediente[]
-  chef: Empleado
+  chef: string
 }
 
-export interface CreateProductoRequest {
+export interface CreatePlatoRequest {
   cod: string
   name: string
   description?: string
-  picture?: string
+  picture: string | null
   price: number
   calification?: number
   tag: string
-  ingredientIds: string[]
-  chefId: string
+  ingredients: {
+        id: string;
+    }[];
+  chef?: Empleado
 }
 
 // ============= PEDIDO =============
@@ -189,15 +191,15 @@ export interface Pedido {
   estimatedEndTime: Date
   endTime: Date
   subtotal: number
-  orderItems: PedidoProducto[]
+  orderItems: PedidoPlato[]
   client: Cliente
   table: Mesa
   bill?: Factura
 }
 
-export interface PedidoProducto {
+export interface PedidoPlato {
   orderItemId: string
-  dish: Producto
+  dish: Plato
   quantity: number
 }
 
@@ -301,7 +303,7 @@ export interface IngredienteFilters {
   uniteOfMeasure?: string
 }
 
-export interface ProductoFilters {
+export interface PlatoFilters {
   search?: string
   precioMin?: number
   precioMax?: number
