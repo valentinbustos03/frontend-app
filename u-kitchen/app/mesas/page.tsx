@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Filter, MoreHorizontal, Eye, Edit, Trash2, Users, CheckCircle, XCircle } from "lucide-react"
@@ -17,12 +16,11 @@ import { MesaFormModal } from "@/components/forms/mesa-form-modal"
 export default function MesasPage() {
   const router = useRouter()
   const { toast } = useToast()
-
   const [mesas, setMesas] = useState<Mesa[]>([])
   const [loading, setLoading] = useState(true)
   const [capacidadFilter, setCapacidadFilter] = useState<string>("all")
   const [ocupadaFilter, setOcupadaFilter] = useState<string>("all")
-
+  const [sectorFilter, setSectorFilter] = useState<string>("all")
   const [modalOpen, setModalOpen] = useState(false)
   const [editingMesa, setEditingMesa] = useState<Mesa | undefined>()
 
@@ -48,15 +46,15 @@ export default function MesasPage() {
 
   const filteredMesas = useMemo(() => {
     return mesas.filter((mesa) => {
-      const matchesCapacidad = capacidadFilter === "all" || mesa.capacidad.toString() === capacidadFilter
+      const matchesCapacidad = capacidadFilter === "all" || mesa.capacity.toString() === capacidadFilter
       const matchesOcupada =
         ocupadaFilter === "all" ||
-        (ocupadaFilter === "ocupada" && mesa.ocupada) ||
-        (ocupadaFilter === "libre" && !mesa.ocupada)
-
-      return matchesCapacidad && matchesOcupada
+        (ocupadaFilter === "ocupada" && mesa.occupied) ||
+        (ocupadaFilter === "libre" && !mesa.occupied)
+      const matchesSector = sectorFilter === "all" || mesa.sector === sectorFilter
+      return matchesCapacidad && matchesOcupada && matchesSector
     })
-  }, [mesas, capacidadFilter, ocupadaFilter])
+  }, [mesas, capacidadFilter, ocupadaFilter, sectorFilter])
 
   const handleDeleteMesa = async (mesa: Mesa) => {
     if (confirm(`¿Estás seguro de que deseas eliminar la mesa ${mesa.cod}?`)) {
@@ -79,11 +77,11 @@ export default function MesasPage() {
 
   const handleToggleOcupada = async (mesa: Mesa) => {
     try {
-      const updatedMesa = await mesaService.toggleOcupada(mesa.id)
-      setMesas(mesas.map((m) => (m.id === mesa.id ? updatedMesa : m)))
+      const updatedMesa = await mesaService.toggleOcupada(mesa)
+      setMesas(mesas.map((m) => (m.id === mesa.id ? updatedMesa.data : m)))
       toast({
         title: "Estado actualizado",
-        description: `La mesa ${mesa.cod} ahora está ${updatedMesa.ocupada ? "ocupada" : "libre"}`,
+        description: `La mesa ${mesa.cod} ahora está ${updatedMesa.data.occupied ? "ocupada" : "libre"}`,
       })
     } catch (error) {
       toast({
@@ -94,15 +92,19 @@ export default function MesasPage() {
     }
   }
 
-  const getCapacidadBadge = (capacidad: number) => {
-    if (capacidad <= 2) {
-      return <Badge className="bg-blue-100 text-blue-800">{capacidad} personas</Badge>
-    } else if (capacidad <= 4) {
-      return <Badge className="bg-green-100 text-green-800">{capacidad} personas</Badge>
+  const getCapacidadBadge = (capacity: number) => {
+    if (capacity <= 2) {
+      return <Badge className="bg-blue-100 text-blue-800">{capacity} personas</Badge>
+    } else if (capacity <= 4) {
+      return <Badge className="bg-green-100 text-green-800">{capacity} personas</Badge>
     } else {
-      return <Badge className="bg-purple-100 text-purple-800">{capacidad} personas</Badge>
+      return <Badge className="bg-purple-100 text-purple-800">{capacity} personas</Badge>
     }
   }
+
+  const uniqueSectors = useMemo(() => {
+    return [...new Set(mesas.map(m => m.sector))]
+  }, [mesas])
 
   if (loading) {
     return (
@@ -146,7 +148,6 @@ export default function MesasPage() {
           Nueva Mesa
         </Button>
       </div>
-
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -156,9 +157,9 @@ export default function MesasPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select value={capacidadFilter} onValueChange={setCapacidadFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Capacidad" />
               </SelectTrigger>
               <SelectContent>
@@ -169,9 +170,8 @@ export default function MesasPage() {
                 <SelectItem value="8">8 personas</SelectItem>
               </SelectContent>
             </Select>
-
             <Select value={ocupadaFilter} onValueChange={setOcupadaFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
@@ -180,10 +180,22 @@ export default function MesasPage() {
                 <SelectItem value="ocupada">Mesas ocupadas</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={sectorFilter} onValueChange={setSectorFilter}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Sector" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los sectores</SelectItem>
+                {uniqueSectors.map((sector) => (
+                  <SelectItem key={sector} value={sector}>
+                    {sector?.charAt(0)?.toUpperCase() + sector.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
-
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -194,24 +206,23 @@ export default function MesasPage() {
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold text-green-600">{mesas.filter((m) => !m.ocupada).length}</div>
+            <div className="text-2xl font-bold text-green-600">{mesas.filter((m) => !m.occupied).length}</div>
             <p className="text-xs text-muted-foreground">Mesas Libres</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold text-red-600">{mesas.filter((m) => m.ocupada).length}</div>
+            <div className="text-2xl font-bold text-red-600">{mesas.filter((m) => m.occupied).length}</div>
             <p className="text-xs text-muted-foreground">Mesas Ocupadas</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold">{mesas.reduce((sum, m) => sum + m.capacidad, 0)}</div>
+            <div className="text-2xl font-bold">{mesas.reduce((sum, m) => sum + m.capacity, 0)}</div>
             <p className="text-xs text-muted-foreground">Capacidad Total</p>
           </CardContent>
         </Card>
       </div>
-
       {/* Table */}
       <Card>
         <CardContent className="p-0">
@@ -222,7 +233,7 @@ export default function MesasPage() {
                 <TableHead>Capacidad</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Descripción</TableHead>
-                <TableHead>Fecha Creación</TableHead>
+                <TableHead>Sector</TableHead>
                 <TableHead className="w-[50px]">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -235,12 +246,12 @@ export default function MesasPage() {
                   <TableCell>
                     <div className="flex items-center">
                       <Users className="mr-2 h-4 w-4 text-gray-400" />
-                      {getCapacidadBadge(mesa.capacidad)}
+                      {getCapacidadBadge(mesa.capacity)}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
-                      {mesa.ocupada ? (
+                      {mesa.occupied ? (
                         <>
                           <XCircle className="mr-2 h-4 w-4 text-red-500" />
                           <Badge className="bg-red-100 text-red-800">Ocupada</Badge>
@@ -254,9 +265,11 @@ export default function MesasPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm text-gray-600">{mesa.descripcion || "Sin descripción"}</div>
+                    <div className="text-sm text-gray-600">{mesa.description || "Sin descripción"}</div>
                   </TableCell>
-                  <TableCell>{new Date(mesa.createdAt).toLocaleDateString("es-ES")}</TableCell>
+                  <TableCell>
+                    <div className="text-sm capitalize">{mesa.sector}</div>
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -279,7 +292,7 @@ export default function MesasPage() {
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleToggleOcupada(mesa)}>
-                          {mesa.ocupada ? (
+                          {mesa.occupied ? (
                             <>
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Marcar como Libre
@@ -302,7 +315,6 @@ export default function MesasPage() {
               ))}
             </TableBody>
           </Table>
-
           {filteredMesas.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500">No se encontraron mesas</p>

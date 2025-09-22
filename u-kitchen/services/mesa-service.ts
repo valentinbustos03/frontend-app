@@ -1,6 +1,11 @@
 import type { Mesa, CreateMesaRequest, MesaFilters, PaginatedResponse } from "@/types"
 import { api } from "@/lib/api"
 
+interface UpdateMesaResponse {
+  message: string;
+  data: Mesa;
+}
+
 class MesaService {
   async getMesas(filters?: MesaFilters): Promise<PaginatedResponse<Mesa>> {
     try {
@@ -39,9 +44,9 @@ class MesaService {
     }
   }
 
-  async updateMesa(id: string, mesa: Partial<CreateMesaRequest>): Promise<Mesa> {
+  async updateMesa(id: string, mesa: Partial<CreateMesaRequest>): Promise<UpdateMesaResponse> {
     try {
-      return await api.put<Mesa>(`/table/${id}`, mesa);
+      return await api.put<UpdateMesaResponse>(`/table/${id}`, mesa);
     } catch (error) {
       console.error("Error updating mesa:", error)
       throw error
@@ -57,12 +62,12 @@ class MesaService {
     }
   }
 
-  async toggleOcupada(id: string): Promise<Mesa> {
+  async toggleOcupada(mesa: Mesa): Promise<UpdateMesaResponse> {
     try {
-      // Primero obtenemos la mesa actual
-      const mesa = await this.getMesaById(id);
-      // Luego la actualizamos con el estado contrario
-      return await this.updateMesa(id, { occupied: !mesa.occupied });
+      return await this.updateMesa(mesa.id, { 
+        ...mesa, 
+        occupied: !mesa.occupied 
+      });
     } catch (error) {
       console.error("Error toggling mesa ocupada:", error)
       throw error

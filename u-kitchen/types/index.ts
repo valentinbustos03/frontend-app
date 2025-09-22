@@ -106,13 +106,13 @@ export interface Mesa {
   description?: string
   occupied: boolean
   sector: string
-  order: Pedido[]
 }
 
 export interface CreateMesaRequest {
   cod: string
   capacity: number
   description?: string
+  occupied: boolean
   sector: string
 }
 
@@ -179,7 +179,7 @@ export interface CreatePlatoRequest {
   ingredients: {
         id: string;
     }[];
-  chef?: Empleado
+  chef: Empleado
 }
 
 // ============= PEDIDO =============

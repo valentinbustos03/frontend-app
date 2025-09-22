@@ -1,7 +1,5 @@
 "use client"
-
-import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -14,9 +12,11 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
+import { Checkbox } from "@/components/ui/checkbox"
+import { toast } from "@/hooks/use-toast"
 import { mesaService } from "@/services/mesa-service"
 import type { Mesa, CreateMesaRequest } from "@/types"
+import { useForm } from "react-hook-form"
 
 interface MesaFormModalProps {
   open: boolean
@@ -26,7 +26,6 @@ interface MesaFormModalProps {
 }
 
 export function MesaFormModal({ open, onOpenChange, mesa, onSuccess }: MesaFormModalProps) {
-  const { toast } = useToast()
   const [loading, setLoading] = useState(false)
 
   const {
@@ -35,18 +34,37 @@ export function MesaFormModal({ open, onOpenChange, mesa, onSuccess }: MesaFormM
     reset,
     formState: { errors },
   } = useForm<CreateMesaRequest>({
-    defaultValues: mesa
-      ? {
-          cod: mesa.cod,
-          capacidad: mesa.capacidad,
-          descripcion: mesa.descripcion,
-        }
-      : {},
+    defaultValues: {
+      cod: "",
+      capacity: 0,
+      description: "",
+      occupied: false,
+      sector: "",
+    },
   })
+
+  useEffect(() => {
+    if (open) {
+      reset(mesa ? {
+        cod: mesa.cod,
+        capacity: mesa.capacity,
+        description: mesa.description || "",
+        occupied: mesa.occupied,
+        sector: mesa.sector,
+      } : {
+        cod: "",
+        capacity: 0,
+        description: "",
+        occupied: false,
+        sector: "",
+      })
+    }
+  }, [open, mesa, reset])
 
   const onSubmit = async (data: CreateMesaRequest) => {
     try {
       setLoading(true)
+      console.log(data)
       if (mesa) {
         await mesaService.updateMesa(mesa.id, data)
         toast({
@@ -86,18 +104,19 @@ export function MesaFormModal({ open, onOpenChange, mesa, onSuccess }: MesaFormM
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="cod">Código</Label>
-            <Input id="cod" {...register("cod", { required: "El código es requerido" })} placeholder="M001" />
+            <Input 
+              id="cod" 
+              {...register("cod", { required: "El código es requerido" })} 
+              placeholder="M001" 
+            />
             {errors.cod && <p className="text-sm text-destructive">{errors.cod.message}</p>}
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="capacidad">Capacidad</Label>
+            <Label htmlFor="capacity">Capacidad</Label>
             <Input
-              id="capacidad"
+              id="capacity"
               type="number"
-              min="1"
-              max="20"
-              {...register("capacidad", {
+              {...register("capacity", {
                 required: "La capacidad es requerida",
                 valueAsNumber: true,
                 min: { value: 1, message: "La capacidad mínima es 1" },
@@ -105,14 +124,33 @@ export function MesaFormModal({ open, onOpenChange, mesa, onSuccess }: MesaFormM
               })}
               placeholder="4"
             />
-            {errors.capacidad && <p className="text-sm text-destructive">{errors.capacidad.message}</p>}
+            {errors.capacity && <p className="text-sm text-destructive">{errors.capacity.message}</p>}
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="descripcion">Descripción</Label>
-            <Textarea id="descripcion" {...register("descripcion")} placeholder="Mesa junto a la ventana..." rows={3} />
+            <Label htmlFor="description">Descripción</Label>
+            <Textarea 
+              id="description" 
+              {...register("description")} 
+              placeholder="Mesa junto a la ventana..." 
+              rows={3} 
+            />
           </div>
-
+          <div className="space-y-2">
+            <Label htmlFor="sector">Sector</Label>
+            <Input 
+              id="sector" 
+              {...register("sector", { required: "El sector es requerido" })} 
+              placeholder="terraza, salón, etc." 
+            />
+            {errors.sector && <p className="text-sm text-destructive">{errors.sector.message}</p>}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="occupied" 
+              {...register("occupied")} 
+            />
+            <Label htmlFor="occupied">Ocupada</Label>
+          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
