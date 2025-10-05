@@ -13,6 +13,8 @@ import {
   Calendar,
   Truck,
   Wheat,
+  ShoppingBasket,
+  BookOpen
 } from "lucide-react"
 
 import {
@@ -36,6 +38,11 @@ const menuItems = [
         label: "Dashboard",
         icon: LayoutDashboard,
         href: "/",
+      },
+      {
+        label: "Menu",
+        icon: BookOpen,
+        href: "/menu",
       },
     ],
   },
@@ -88,9 +95,9 @@ const menuItems = [
         href: "/ingredientes",
       },
       {
-        label: "Productos",
+        label: "Platos",
         icon: ChefHat,
-        href: "/productos",
+        href: "/platos",
       },
     ],
   },

@@ -32,12 +32,13 @@ export default function DashboardPage() {
 
       const totalEmployees = employees.length
       const activeEmployees = employees.length
-      const averageSalary = employees.reduce((sum, emp) => sum + emp.sueldo, 0) / totalEmployees
+      const averageSalary = employees.reduce((sum, emp) => sum + (emp?.salary ?? 0), 0) / totalEmployees
 
       const currentMonth = new Date().getMonth()
       const currentYear = new Date().getFullYear()
       const newHiresThisMonth = employees.filter((emp) => {
-        const hireDate = new Date(emp.createdAt)
+        // const hireDate = new Date(emp.createdAt)
+        const hireDate = new Date()
         return hireDate.getMonth() === currentMonth && hireDate.getFullYear() === currentYear
       }).length
 
