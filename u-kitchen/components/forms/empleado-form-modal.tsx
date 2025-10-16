@@ -1,6 +1,7 @@
 "use client"
-import type React from "react"
-import { useState, useEffect } from "react"
+
+import { useEffect, useState } from "react"
+import { useForm, useWatch, Controller } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -12,12 +13,27 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/hooks/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { empleadoService } from "@/services/empleado-service"
-import { Empleado, CreateEmpleadoRequest, EmployeeRole, EmployeeShift } from "@/types"
-import { EmployeeRole as EmployeeRoleEnum, EmployeeShift as ShiftEnum } from "@/types"
-import { useForm, Controller } from "react-hook-form"
+import { userService } from "@/services/usuario-service"
+import type { 
+  Empleado, 
+  CreateEmpleadoRequest, 
+  Usuario, 
+  UserRole, 
+  CreateUsuarioRequest,
+  EmployeeRole,
+  EmployeeShift 
+} from "@/types"
+import { EmployeeRole as EmployeeRoleEnum, EmployeeShift as EmployeeShiftEnum, UserRole as UserRoleEnum } from "@/types"
+
+interface FormData extends CreateEmpleadoRequest {
+  email: string
+  fullName: string
+  password: string
+  phoneNumber: string
+}
 
 interface EmpleadoFormModalProps {
   open: boolean
@@ -33,69 +49,140 @@ export function EmpleadoFormModal({ open, onOpenChange, empleado, onSuccess }: E
     register,
     handleSubmit,
     reset,
-    control,
     watch,
+    control,
     formState: { errors },
-  } = useForm<CreateEmpleadoRequest>({
+  } = useForm<FormData>({
     defaultValues: {
       taxId: "",
-      shift: ShiftEnum.MAÑANA,
+      shift: "",
       workedHours: 0,
       priceHour: 0,
-      role: EmployeeRole.WAITER,
+      salary: 0,
+      role: EmployeeRoleEnum.CHEF,
       hierarchy: "",
       tag: "",
       calification: 0,
-      sector: ""
+      sector: "",
+      email: "",
+      fullName: "",
+      password: "",
+      phoneNumber: "",
     },
   })
 
-  // Watch para calcular sueldo y campos condicionales
-  const watchedValues = watch()
-  const calculatedSueldo = watchedValues.workedHours * watchedValues.priceHour || 0
+  const role = watch("role")
+  const isEdit = !!empleado
+  const requirePassword = !isEdit
 
-  // Reset del formulario cuando cambia el modal
   useEffect(() => {
     if (open) {
       reset(empleado ? {
         taxId: empleado.taxId,
         shift: empleado.shift,
-        workedHours: empleado.workedHours,
-        priceHour: empleado.priceHour,
+        workedHours: empleado.workedHours || 0,
+        priceHour: empleado.priceHour || 0,
+        salary: empleado.salary || 0,
         role: empleado.role,
-        hierarchy: empleado.hierarchy,
-        tag: empleado.tag,
-        calification: empleado.calification,
-        sector: empleado.sector
+        hierarchy: empleado.hierarchy || "",
+        tag: empleado.tag || "",
+        calification: empleado.calification || 0,
+        sector: empleado.sector || "",
+        email: empleado.user?.email || "",
+        fullName: empleado.user?.fullName || "",
+        password: empleado.user?.password || "",
+        phoneNumber: empleado.user?.phoneNumber || "",
       } : {
         taxId: "",
-        shift: ShiftEnum.MAÑANA,
+        shift: "",
         workedHours: 0,
         priceHour: 0,
-        role: EmployeeRole.WAITER,
+        salary: 0,
+        role: EmployeeRoleEnum.CHEF,
         hierarchy: "",
         tag: "",
         calification: 0,
-        sector: ""
+        sector: "",
+        email: "",
+        fullName: "",
+        password: "",
+        phoneNumber: "",
       })
     }
   }, [open, empleado, reset])
 
-  const onSubmit = async (data: CreateEmpleadoRequest) => {
+  const onSubmit = async (data: FormData) => {
     try {
       setLoading(true)
-      console.log(data)
-      if (empleado) {
-        await empleadoService.updateEmpleado(empleado.id, data)
+      const employeeData: CreateEmpleadoRequest = {
+        taxId: data.taxId,
+        shift: data.shift,
+        workedHours: data.workedHours,
+        priceHour: data.priceHour,
+        salary: data.salary,
+        role: data.role,
+        ...(role === EmployeeRoleEnum.CHEF && {
+          hierarchy: data.hierarchy,
+          tag: data.tag,
+        }),
+        ...(role === EmployeeRoleEnum.WAITER && {
+          calification: data.calification,
+          sector: data.sector,
+        }),
+      }
+
+      if (isEdit) {
+        // Actualizar empleado
+        await empleadoService.updateEmpleado(empleado!.id, employeeData)
+
+        // Manejar usuario
+        if (empleado!.user) {
+          // Actualizar usuario existente (password solo si se proporciona)
+          const updateUserData: Partial<CreateUsuarioRequest> = {
+            email: data.email,
+            fullName: data.fullName,
+            phoneNumber: data.phoneNumber,
+            role: UserRoleEnum.ADMIN,  // Basado en el ejemplo del backend para empleados
+          }
+          if (data.password) {
+            updateUserData.password = data.password
+          }
+          await userService.updateUsuario(empleado!.user.id, updateUserData)
+        } else {
+          // Crear usuario nuevo
+          const createUserData: CreateUsuarioRequest = {
+            email: data.email,
+            fullName: data.fullName,
+            password: data.password,
+            phoneNumber: data.phoneNumber,
+            role: UserRoleEnum.ADMIN,
+            employee: { id: empleado!.id },
+          }
+          await userService.createUsuario(createUserData)
+        }
+
         toast({
           title: "Empleado actualizado",
-          description: "El empleado ha sido actualizado exitosamente",
+          description: "El empleado y usuario han sido actualizados exitosamente",
         })
       } else {
-        await empleadoService.createEmpleado(data)
+        // Crear empleado primero
+        const newEmpleado = await empleadoService.createEmpleado(employeeData)
+
+        // Crear usuario asociado
+        const createUserData: CreateUsuarioRequest = {
+          email: data.email,
+          fullName: data.fullName,
+          password: data.password,
+          phoneNumber: data.phoneNumber,
+          role: UserRoleEnum.ADMIN,
+          employee: { id: newEmpleado.id },
+        }
+        await userService.createUsuario(createUserData)
+
         toast({
           title: "Empleado creado",
-          description: "El empleado ha sido creado exitosamente",
+          description: "El empleado y usuario han sido creados exitosamente",
         })
       }
       onSuccess()
@@ -104,7 +191,7 @@ export function EmpleadoFormModal({ open, onOpenChange, empleado, onSuccess }: E
     } catch (error) {
       toast({
         title: "Error",
-        description: `No se pudo ${empleado ? "actualizar" : "crear"} el empleado`,
+        description: `No se pudo ${isEdit ? "actualizar" : "crear"} el empleado/usuario`,
         variant: "destructive",
       })
     } finally {
@@ -114,197 +201,252 @@ export function EmpleadoFormModal({ open, onOpenChange, empleado, onSuccess }: E
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle className="text-orange-600">{empleado ? "Editar Empleado" : "Nuevo Empleado"}</DialogTitle>
+          <DialogTitle className="text-orange-600">
+            {isEdit ? "Editar Empleado" : "Nuevo Empleado y Usuario"}
+          </DialogTitle>
           <DialogDescription>
-            {empleado ? "Modifica los datos del empleado" : "Completa los datos del nuevo empleado"}
+            {isEdit 
+              ? "Modifica los datos del empleado y usuario asociado" 
+              : "Completa los datos para crear un nuevo empleado y usuario"
+            }
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="taxId">CUIT/CUIL</Label>
-            <Input
-              id="taxId"
-              {...register("taxId", { 
-                required: "CUIT/CUIL es requerido",
-                pattern: {
-                  value: /^\d{2}-\d{8}-\d{1}$/,
-                  message: "Formato inválido. Use: 20-12345678-9"
-                }
-              })}
-              placeholder="20-12345678-9"
-            />
-            {errors.taxId && <p className="text-red-500 text-sm">{errors.taxId.message}</p>}
-          </div>
-
-          {/* Campos de texto tag y sector */}
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Campos del Empleado - Columna izquierda */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Datos del Empleado</h3>
             <div className="space-y-2">
-              <Label htmlFor="tag">Tag</Label>
+              <Label htmlFor="taxId">CUIT</Label>
               <Input
-                id="tag"
-                {...register("tag", { 
-                  maxLength: { 
-                    value: 50, 
-                    message: "El tag no puede tener más de 50 caracteres" 
-                  }
-                })}
-                placeholder="Etiqueta del empleado"
+                id="taxId"
+                {...register("taxId", { required: "El CUIT es requerido" })}
+                placeholder="20-12345678-9"
               />
-              {errors.tag && <p className="text-red-500 text-sm">{errors.tag.message}</p>}
+              {errors.taxId && <p className="text-sm text-destructive">{errors.taxId.message}</p>}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="sector">Sector</Label>
-              <Input
-                id="sector"
-                {...register("sector", { 
-                  maxLength: { 
-                    value: 100, 
-                    message: "El sector no puede tener más de 100 caracteres" 
-                  }
-                })}
-                placeholder="Sector de trabajo"
-              />
-              {errors.sector && <p className="text-red-500 text-sm">{errors.sector.message}</p>}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="shift">Shift</Label>
-              <Controller
-                name="shift"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un shift" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ShiftEnum.MAÑANA}>Mañana</SelectItem>
-                      <SelectItem value={ShiftEnum.TARDE}>Tarde</SelectItem>
-                      <SelectItem value={ShiftEnum.NOCHE}>Noche</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+            <div className="flex gap-4">
+              <div className="w-1/2 space-y-2">
+                <Label htmlFor="role">Rol</Label>
+                <Controller
+                  name="role"
+                  control={control}
+                  rules={{ required: "El rol es requerido" }}
+                  render={({ field, fieldState: { error } }) => (
+                    <>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecciona un rol" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={EmployeeRoleEnum.CHEF}>Chef</SelectItem>
+                          <SelectItem value={EmployeeRoleEnum.WAITER}>Mesero</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {error && <p className="text-sm text-destructive">{error.message}</p>}
+                    </>
+                  )}
+                />
+              </div>
+              <div className="w-1/2 space-y-2">
+                <Label htmlFor="shift">Turno</Label>
+                <Controller
+                  name="shift"
+                  control={control}
+                  rules={{ required: "El turno es requerido" }}
+                  render={({ field, fieldState: { error } }) => (
+                    <>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecciona un turno" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={EmployeeShiftEnum.MAÑANA}>Mañana</SelectItem>
+                          <SelectItem value={EmployeeShiftEnum.TARDE}>Tarde</SelectItem>
+                          <SelectItem value={EmployeeShiftEnum.NOCHE}>Noche</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {error && <p className="text-sm text-destructive">{error.message}</p>}
+                    </>
+                  )}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">Tipo de Empleado</Label>
-              <Controller
-                name="role"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={EmployeeRoleEnum.WAITER}>Mesero</SelectItem>
-                      <SelectItem value={EmployeeRoleEnum.CHEF}>Chef</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="workedHours">Horas Trabajadas</Label>
               <Input
                 id="workedHours"
                 type="number"
-                {...register("workedHours", { 
-                  required: "Horas trabajadas son requeridas",
-                  min: { value: 0, message: "Debe ser mayor o igual a 0" },
-                  valueAsNumber: true
-                })}
-                min="0"
+                {...register("workedHours", { required: "Las horas son requeridas", valueAsNumber: true, min: { value: 0, message: "Debe ser positivo" } })}
+                placeholder="160"
               />
-              {errors.workedHours && <p className="text-red-500 text-sm">{errors.workedHours.message}</p>}
+              {errors.workedHours && <p className="text-sm text-destructive">{errors.workedHours.message}</p>}
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="priceHour">Precio por Hora ($)</Label>
+              <Label htmlFor="priceHour">Precio por Hora</Label>
               <Input
                 id="priceHour"
                 type="number"
                 step="0.01"
-                {...register("priceHour", { 
-                  required: "Precio por hora es requerido",
-                  min: { value: 0, message: "Debe ser mayor o igual a 0" },
-                  valueAsNumber: true
-                })}
-                min="0"
+                {...register("priceHour", { required: "El precio por hora es requerido", valueAsNumber: true, min: { value: 0, message: "Debe ser positivo" } })}
+                placeholder="15.5"
               />
-              {errors.priceHour && <p className="text-red-500 text-sm">{errors.priceHour.message}</p>}
+              {errors.priceHour && <p className="text-sm text-destructive">{errors.priceHour.message}</p>}
             </div>
-          </div>
 
-          <div className="p-4 bg-muted rounded-lg">
-            <Label className="text-sm font-medium">Sueldo Calculado</Label>
-            <p className="text-2xl font-bold text-primary">${calculatedSueldo.toFixed(2)}</p>
-            <p className="text-sm text-muted-foreground">
-              {watchedValues.workedHours || 0} horas × ${(watchedValues.priceHour || 0).toFixed(2)}/hora
-            </p>
-          </div>
-
-          {/* Campo condicional para Chef */}
-          {watchedValues.role === EmployeeRoleEnum.CHEF && (
             <div className="space-y-2">
-              <Label htmlFor="hierarchy">Jerarquía</Label>
-              <Controller
-                name="hierarchy"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona una jerarquía" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Chef Ejecutivo">Chef Ejecutivo</SelectItem>
-                      <SelectItem value="Sous Chef">Sous Chef</SelectItem>
-                      <SelectItem value="Chef de Partida">Chef de Partida</SelectItem>
-                      <SelectItem value="Cocinero">Cocinero</SelectItem>
-                      <SelectItem value="Ayudante de Cocina">Ayudante de Cocina</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.hierarchy && <p className="text-red-500 text-sm">{errors.hierarchy.message}</p>}
-            </div>
-          )}
-
-          {/* Campo condicional para Waiter */}
-          {watchedValues.role === EmployeeRoleEnum.WAITER && (
-            <div className="space-y-2">
-              <Label htmlFor="calification">Calificación (1-5)</Label>
+              <Label htmlFor="salary">Salario (opcional)</Label>
               <Input
-                id="calification"
+                id="salary"
                 type="number"
-                step="0.1"
-                min="1"
-                max="5"
-                {...register("calification", { 
-                  min: { value: 1, message: "Mínimo 1" },
-                  max: { value: 5, message: "Máximo 5" },
-                  valueAsNumber: true
-                })}
+                step="0.01"
+                {...register("salary", { valueAsNumber: true, min: { value: 0, message: "Debe ser positivo" } })}
+                placeholder="0"
               />
-              {errors.calification && <p className="text-red-500 text-sm">{errors.calification.message}</p>}
+              {errors.salary && <p className="text-sm text-destructive">{errors.salary.message}</p>}
             </div>
-          )}
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button className="text-white bg-orange-600 hover:bg-orange-700" type="submit" disabled={loading}>
-              {loading ? "Guardando..." : empleado ? "Actualizar" : "Crear"}
-            </Button>
-          </DialogFooter>
+            {/* Campos condicionales basados en rol */}
+            {role === EmployeeRoleEnum.CHEF && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="hierarchy">Jerarquía</Label>
+                  <Input
+                    id="hierarchy"
+                    {...register("hierarchy")}
+                    placeholder="Ej: Chef Ejecutivo"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tag">Tag</Label>
+                  <Input
+                    id="tag"
+                    {...register("tag")}
+                    placeholder="Ej: pastas"
+                  />
+                </div>
+              </>
+            )}
+
+            {role === EmployeeRoleEnum.WAITER && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="calification">Calificación</Label>
+                  <Input
+                    id="calification"
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    {...register("calification", { valueAsNumber: true, min: { value: 0, message: "Mínimo 0" }, max: { value: 5, message: "Máximo 5" } })}
+                    placeholder="4.5"
+                  />
+                  {errors.calification && <p className="text-sm text-destructive">{errors.calification.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sector">Sector</Label>
+                  <Input
+                    id="sector"
+                    {...register("sector")}
+                    placeholder="Ej: terraza"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Campos del Usuario - Columna derecha */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Datos del Usuario</h3>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                {...register("email", { 
+                  required: "El email es requerido",
+                  pattern: {
+                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                    message: "Email inválido"
+                  }
+                })}
+                placeholder="ejemplo@email.com"
+              />
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Nombre Completo</Label>
+              <Input
+                id="fullName"
+                {...register("fullName", { 
+                  required: "El nombre completo es requerido",
+                  minLength: {
+                    value: 1,
+                    message: "El nombre debe tener al menos 1 carácter"
+                  }
+                })}
+                placeholder="Nombre Apellido"
+              />
+              {errors.fullName && <p className="text-sm text-destructive">{errors.fullName.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Contraseña {requirePassword ? "(requerida)" : "(opcional)"}</Label>
+              <Input
+                id="password"
+                type="password"
+                {...register("password", { 
+                  required: requirePassword ? "La contraseña es requerida" : false,
+                  minLength: {
+                    value: 8,
+                    message: "La contraseña debe tener al menos 8 caracteres"
+                  },
+                  maxLength: {
+                    value: 64,
+                    message: "La contraseña no puede superar los 64 caracteres"
+                  },
+                  pattern: {
+                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
+                    message: "Debe contener al menos una letra mayúscula, una minúscula y un número"
+                  }
+                })}
+                placeholder="Mínimo 8 caracteres"
+              />
+              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Teléfono</Label>
+              <Input
+                id="phoneNumber"
+                {...register("phoneNumber", { 
+                  required: "El teléfono es requerido",
+                  minLength: {
+                    value: 8,
+                    message: "El teléfono debe tener al menos 8 caracteres"
+                  }
+                })}
+                placeholder="+54 9 011 123 4567"
+              />
+              {errors.phoneNumber && <p className="text-sm text-destructive">{errors.phoneNumber.message}</p>}
+            </div>
+          </div>
+
+          <div className="col-span-1 sm:col-span-2">
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button className="text-white bg-orange-600 hover:bg-orange-700" type="submit" disabled={loading}>
+                {loading ? "Guardando..." : isEdit ? "Actualizar" : "Crear"}
+              </Button>
+            </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

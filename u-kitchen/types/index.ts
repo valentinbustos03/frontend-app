@@ -16,6 +16,21 @@ export enum UserRole {
   USER = "user",
 }
 
+export interface CreateUsuarioRequest {
+  email: string
+  fullName: string
+  password?: string  // Opcional para updates
+  phoneNumber: string
+  role: UserRole
+  profilePicture?: string
+  client?: {
+    id: string
+  }
+  employee?: {
+    id: string
+  }
+}
+
 // ============= CLIENTE =============
 export interface Cliente {
   id: string
@@ -138,7 +153,9 @@ export interface CreateIngredienteRequest {
   uniteOfMeasure: UnidadMedida
   origin: string
   stockLimit: number
-  suppliers: string[]
+  suppliers: {
+    id: string;
+  }[];
 }
 
 export enum UnidadMedida {
@@ -193,6 +210,7 @@ export interface Pedido {
   subtotal: number
   orderItems: PedidoPlato[]
   client: Cliente
+  waiter: Empleado
   table: Mesa
   bill?: Factura
 }
@@ -213,14 +231,22 @@ export enum PedidoEstado {
 }
 
 export interface CreatePedidoRequest {
-  description?: string
-  estimatedEndTime: Date
-  clientId: string
-  tableId: string
+  description?: string;
+  status: PedidoEstado;  // e.g., "pendiente" (usa el enum PedidoEstado si lo prefieres: PedidoEstado)
+  estimatedEndTime: string;  // Formato ISO: "2025-08-08T15:00:00Z"
+  endTime?: string | null;  // Opcional, null por defecto si no se usa
   orderItems: {
-    dishId: string
-    quantity: number
-  }[]
+    dish: {
+      id: string;
+    };
+    quantity: number;
+  }[];
+  client: {
+    id: string;
+  };
+  table: {
+    id: string;
+  };
 }
 
 // ============= RESERVA =============

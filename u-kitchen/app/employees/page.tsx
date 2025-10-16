@@ -222,7 +222,7 @@ export default function EmpleadosPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="text-lg">
-                    {/* {empleado.nombre} {empleado.apellido} */}nombre apellido
+                    {empleado.user?.fullName}
                   </CardTitle>
                   <CardDescription>
                     {empleado.taxId}

@@ -1,6 +1,11 @@
 import type { Cliente, CreateClienteRequest, ClienteFilters, PaginatedResponse } from "@/types"
 import { api } from "@/lib/api"
 
+interface ApiResponse<T> {
+  message: string
+  data: T
+}
+
 class ClienteService {
   async getClientes(filters?: ClienteFilters): Promise<PaginatedResponse<Cliente>> {
     try {
@@ -32,7 +37,8 @@ class ClienteService {
 
   async createCliente(cliente: CreateClienteRequest): Promise<Cliente> {
     try {
-      return await api.post<Cliente>('/client/add', cliente);
+      const response = await api.post<ApiResponse<Cliente>>('/client/add', cliente);
+      return response.data;
     } catch (error) {
       console.error("Error creating cliente:", error)
       throw error
@@ -41,7 +47,8 @@ class ClienteService {
 
   async updateCliente(id: string, cliente: Partial<CreateClienteRequest>): Promise<Cliente> {
     try {
-      return await api.put<Cliente>(`/client/${id}`, cliente);
+      const response = await api.put<ApiResponse<Cliente>>(`/client/${id}`, cliente);
+      return response.data;
     } catch (error) {
       console.error("Error updating cliente:", error)
       throw error

@@ -1,6 +1,11 @@
 import type { Empleado, CreateEmpleadoRequest, EmpleadoFilters, PaginatedResponse } from "@/types"
 import { api } from "@/lib/api"
 
+interface ApiResponse<T> {
+  message: string
+  data: T
+}
+
 class EmpleadoService {
   async getEmpleados(filters?: EmpleadoFilters): Promise<PaginatedResponse<Empleado>> {
     try {
@@ -32,7 +37,8 @@ class EmpleadoService {
 
   async createEmpleado(empleado: CreateEmpleadoRequest): Promise<Empleado> {
     try {
-      return await api.post<Empleado>('/employee/add', empleado);
+      const response = await api.post<ApiResponse<Empleado>>('/employee/add', empleado);
+      return response.data;
     } catch (error) {
       console.error("Error creating empleado:", error)
       throw error
@@ -41,7 +47,8 @@ class EmpleadoService {
 
   async updateEmpleado(id: string, empleado: Partial<CreateEmpleadoRequest>): Promise<Empleado> {
     try {
-      return await api.put<Empleado>(`/employee/${id}`, empleado);
+      const response = await api.put<ApiResponse<Empleado>>(`/employee/${id}`, empleado);
+      return response.data;
     } catch (error) {
       console.error("Error updating empleado:", error)
       throw error

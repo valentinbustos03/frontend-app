@@ -249,13 +249,13 @@ export default function ClientesPage() {
                 <TableHead>Contacto</TableHead>
                 <TableHead>Pedidos</TableHead>
                 <TableHead>Penalización</TableHead>
-                <TableHead>Fecha Registro</TableHead>
+                {/* <TableHead>Fecha Registro</TableHead> */}
                 <TableHead className="w-[50px]">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredClientes.map((cliente) => (
-                <TableRow key={cliente.id} className="hover:bg-gray-50">
+                <TableRow key={cliente.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <Avatar>
@@ -290,7 +290,7 @@ export default function ClientesPage() {
                     </div>
                   </TableCell>
                   <TableCell>{getPenalizacionBadge(cliente.penalty)}</TableCell>
-                  <TableCell>{/*new Date(cliente.createdAt).toLocaleDateString("es-ES")*/}</TableCell>
+                  {/* <TableCell>{new Date(cliente.createdAt).toLocaleDateString("es-ES")}</TableCell> */}
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
