@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useForm, Controller } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,172 +14,230 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
-import type { Proveedor, CreateProveedorRequest } from "@/types"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { proveedorService } from "@/services/proveedor-service"
+import type { 
+  Proveedor, 
+  CreateProveedorRequest 
+} from "@/types"
+
+interface FormData extends CreateProveedorRequest {}
 
 interface ProveedorFormModalProps {
   open: boolean
-  onClose: () => void
-  onSubmit: (data: CreateProveedorRequest) => Promise<void>
+  onOpenChange: (open: boolean) => void
   proveedor?: Proveedor
-  title: string
+  onSuccess: () => void
 }
 
-export function ProveedorFormModal({ open, onClose, onSubmit, proveedor, title }: ProveedorFormModalProps) {
-  const [formData, setFormData] = useState<CreateProveedorRequest>({
-    razonSocial: "",
-    cuitCuil: "",
-    mail: "",
-    telefono: "",
-    tipoIngrediente: "",
-    nombre: "",
-    compania: "",
+export function ProveedorFormModal({ open, onOpenChange, proveedor, onSuccess }: ProveedorFormModalProps) {
+  const [loading, setLoading] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<FormData>({
+    defaultValues: {
+      companyName: "",
+      taxId: "",
+      mail: "",
+      phoneNumber: "",
+      typeIngredient: "",
+      fullName: "",
+      bussinessName: "",
+    },
   })
-  const [isLoading, setIsLoading] = useState(false)
+
+  const isEdit = !!proveedor
 
   useEffect(() => {
-    if (proveedor) {
-      setFormData({
-        razonSocial: proveedor.razonSocial,
-        cuitCuil: proveedor.cuitCuil,
+    if (open) {
+      reset(proveedor ? {
+        companyName: proveedor.companyName,
+        taxId: proveedor.taxId,
         mail: proveedor.mail,
-        telefono: proveedor.telefono,
-        tipoIngrediente: proveedor.tipoIngrediente,
-        nombre: proveedor.nombre,
-        compania: proveedor.compania,
-      })
-    } else {
-      setFormData({
-        razonSocial: "",
-        cuitCuil: "",
+        phoneNumber: proveedor.phoneNumber,
+        typeIngredient: proveedor.typeIngredient,
+        fullName: proveedor.fullName,
+        bussinessName: proveedor.bussinessName,
+      } : {
+        companyName: "",
+        taxId: "",
         mail: "",
-        telefono: "",
-        tipoIngrediente: "",
-        nombre: "",
-        compania: "",
+        phoneNumber: "",
+        typeIngredient: "",
+        fullName: "",
+        bussinessName: "",
       })
     }
-  }, [proveedor, open])
+  }, [open, proveedor, reset])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
+  const onSubmit = async (data: FormData) => {
     try {
-      await onSubmit(formData)
-      toast({
-        title: "Éxito",
-        description: `Proveedor ${proveedor ? "actualizado" : "creado"} correctamente`,
-      })
-      onClose()
+      setLoading(true)
+      if (isEdit) {
+        await proveedorService.updateProveedor(proveedor!.id, data)
+        toast({
+          title: "Proveedor actualizado",
+          description: "El proveedor ha sido actualizado exitosamente",
+        })
+      } else {
+        await proveedorService.createProveedor(data)
+        toast({
+          title: "Proveedor creado",
+          description: "El proveedor ha sido creado exitosamente",
+        })
+      }
+      onSuccess()
+      onOpenChange(false)
+      reset()
     } catch (error) {
       toast({
         title: "Error",
-        description: `Error al ${proveedor ? "actualizar" : "crear"} el proveedor`,
+        description: `No se pudo ${isEdit ? "actualizar" : "crear"} el proveedor`,
         variant: "destructive",
       })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  const handleInputChange = (field: keyof CreateProveedorRequest, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+  const ingredientTypes = ["Carnes", "Verduras", "Lácteos", "Cereales", "Bebidas", "Pasta", "Otros"]
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle className="text-orange-600">{title}</DialogTitle>
+          <DialogTitle className="text-orange-600">
+            {isEdit ? "Editar Proveedor" : "Nuevo Proveedor"}
+          </DialogTitle>
           <DialogDescription>
-            {proveedor ? "Edita los datos del proveedor" : "Completa los datos del nuevo proveedor"}
+            {isEdit 
+              ? "Modifica los datos del proveedor" 
+              : "Completa los datos para crear un nuevo proveedor"
+            }
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="razonSocial">Razón Social</Label>
-            <Input
-              id="razonSocial"
-              value={formData.razonSocial}
-              onChange={(e) => handleInputChange("razonSocial", e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="cuitCuil">CUIT/CUIL</Label>
-            <Input
-              id="cuitCuil"
-              value={formData.cuitCuil}
-              onChange={(e) => handleInputChange("cuitCuil", e.target.value)}
-              placeholder="30-12345678-9"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Campos principales - Columna izquierda */}
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="mail">Email</Label>
+              <Label htmlFor="companyName">Razón Social</Label>
               <Input
-                id="mail"
-                type="email"
-                value={formData.mail}
-                onChange={(e) => handleInputChange("mail", e.target.value)}
-                placeholder="contacto@proveedor.com"
-                required
+                id="companyName"
+                {...register("companyName", { required: "La razón social es requerida" })}
+                placeholder="Nombre de la empresa"
               />
+              {errors.companyName && <p className="text-sm text-destructive">{errors.companyName.message}</p>}
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="telefono">Teléfono</Label>
+              <Label htmlFor="taxId">CUIT/CUIL</Label>
               <Input
-                id="telefono"
-                value={formData.telefono}
-                onChange={(e) => handleInputChange("telefono", e.target.value)}
-                placeholder="+1234567890"
-                required
+                id="taxId"
+                {...register("taxId", {
+                required: "El CUIT/CUIL es requerido",
+                pattern: {
+                value: /^\d{2}-\d{8}-\d{1}$/,
+                message: "Formato de CUIT/CUIL inválido. Debe ser XX-XXXXXXXX-X"
+                }
+                })}
+                placeholder="30-12345678-9"
               />
+              {errors.taxId && <p className="text-sm text-destructive">{errors.taxId.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bussinessName">Compañía</Label>
+              <Input
+                id="bussinessName"
+                {...register("bussinessName", { required: "La compañía es requerida" })}
+                placeholder="Nombre de la compañía"
+              />
+              {errors.bussinessName && <p className="text-sm text-destructive">{errors.bussinessName.message}</p>}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="nombre">Nombre</Label>
-            <Input
-              id="nombre"
-              value={formData.nombre}
-              onChange={(e) => handleInputChange("nombre", e.target.value)}
-              required
-            />
+          {/* Campos de contacto - Columna derecha */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Nombre</Label>
+              <Input
+                id="fullName"
+                {...register("fullName", { required: "El nombre es requerido" })}
+                placeholder="Nombre del contacto"
+              />
+              {errors.fullName && <p className="text-sm text-destructive">{errors.fullName.message}</p>}
+            </div>
+
+            <div className="flex gap-4">
+              <div className="w-1/2 space-y-2">
+                <Label htmlFor="mail">Email</Label>
+                <Input
+                  id="mail"
+                  type="email"
+                  {...register("mail", { 
+                    required: "El email es requerido",
+                    pattern: {
+                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                      message: "Email inválido"
+                    }
+                  })}
+                  placeholder="contacto@proveedor.com"
+                />
+                {errors.mail && <p className="text-sm text-destructive">{errors.mail.message}</p>}
+              </div>
+              <div className="w-1/2 space-y-2">
+                <Label htmlFor="phoneNumber">Teléfono</Label>
+                <Input
+                  id="phoneNumber"
+                  {...register("phoneNumber", { required: "El teléfono es requerido" })}
+                  placeholder="+54 9 341 555 1234"
+                />
+                {errors.phoneNumber && <p className="text-sm text-destructive">{errors.phoneNumber.message}</p>}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="typeIngredient">Tipo de Ingrediente</Label>
+              <Controller
+                name="typeIngredient"
+                control={control}
+                rules={{ required: "El tipo de ingrediente es requerido" }}
+                render={({ field, fieldState: { error } }) => (
+                  <>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecciona un tipo de ingrediente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ingredientTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {error && <p className="text-sm text-destructive">{error.message}</p>}
+                  </>
+                )}
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="compania">Compañía</Label>
-            <Input
-              id="compania"
-              value={formData.compania}
-              onChange={(e) => handleInputChange("compania", e.target.value)}
-              required
-            />
+          <div className="col-span-1 sm:col-span-2">
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button className="text-white bg-orange-600 hover:bg-orange-700" type="submit" disabled={loading}>
+                {loading ? "Guardando..." : isEdit ? "Actualizar" : "Crear"}
+              </Button>
+            </DialogFooter>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tipoIngrediente">Tipo de Ingrediente</Label>
-            <Input
-              id="tipoIngrediente"
-              value={formData.tipoIngrediente}
-              onChange={(e) => handleInputChange("tipoIngrediente", e.target.value)}
-              placeholder="Carnes, Verduras, Lácteos, etc."
-              required
-            />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button className="text-white bg-orange-600 hover:bg-orange-700" type="submit" disabled={isLoading}>
-              {isLoading ? "Guardando..." : proveedor ? "Actualizar" : "Crear"}
-            </Button>
-          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

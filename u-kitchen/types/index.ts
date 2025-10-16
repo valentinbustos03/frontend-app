@@ -100,7 +100,6 @@ export interface Proveedor {
   typeIngredient: string
   fullName: string
   bussinessName: string
-  ingredients: Ingrediente[]
 }
 
 export interface CreateProveedorRequest {

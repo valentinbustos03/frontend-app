@@ -48,17 +48,17 @@ export default function ProveedoresPage() {
     return proveedores.filter((proveedor) => {
       const matchesSearch =
         searchTerm === "" ||
-        proveedor.razonSocial.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        proveedor.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        proveedor.compania.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        proveedor.tipoIngrediente.toLowerCase().includes(searchTerm.toLowerCase())
+        proveedor.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        proveedor.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        proveedor.bussinessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        proveedor.typeIngredient.toLowerCase().includes(searchTerm.toLowerCase())
 
       return matchesSearch
     })
   }, [proveedores, searchTerm])
 
   const handleDeleteProveedor = async (proveedor: Proveedor) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar a ${proveedor.razonSocial}?`)) {
+    if (confirm(`¿Estás seguro de que deseas eliminar a ${proveedor.companyName}?`)) {
       try {
         await proveedorService.deleteProveedor(proveedor.id)
         setProveedores(proveedores.filter((p) => p.id !== proveedor.id))
@@ -83,6 +83,7 @@ export default function ProveedoresPage() {
       Lácteos: "bg-blue-100 text-blue-800",
       Cereales: "bg-yellow-100 text-yellow-800",
       Bebidas: "bg-purple-100 text-purple-800",
+      Pasta: "bg-pink-100 text-pink-800",
     }
     return <Badge className={colors[tipo as keyof typeof colors] || "bg-gray-100 text-gray-800"}>{tipo}</Badge>
   }
@@ -161,19 +162,19 @@ export default function ProveedoresPage() {
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold">{new Set(proveedores.map((p) => p.tipoIngrediente)).size}</div>
+            <div className="text-2xl font-bold">{new Set(proveedores.map((p) => p.typeIngredient)).size}</div>
             <p className="text-xs text-muted-foreground">Tipos de Ingredientes</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold">{new Set(proveedores.map((p) => p.compania)).size}</div>
+            <div className="text-2xl font-bold">{new Set(proveedores.map((p) => p.bussinessName)).size}</div>
             <p className="text-xs text-muted-foreground">Compañías</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold">{proveedores.filter((p) => p.tipoIngrediente === "Carnes").length}</div>
+            <div className="text-2xl font-bold">{proveedores.filter((p) => p.typeIngredient === "Carnes").length}</div>
             <p className="text-xs text-muted-foreground">Proveedores de Carnes</p>
           </CardContent>
         </Card>
@@ -190,7 +191,6 @@ export default function ProveedoresPage() {
                 <TableHead>Tipo Ingrediente</TableHead>
                 <TableHead>Compañía</TableHead>
                 <TableHead>CUIT/CUIL</TableHead>
-                <TableHead>Fecha Registro</TableHead>
                 <TableHead className="w-[50px]">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -203,8 +203,8 @@ export default function ProveedoresPage() {
                         <Building className="h-5 w-5 text-orange-600" />
                       </div>
                       <div>
-                        <div className="font-medium text-orange-600">{proveedor.razonSocial}</div>
-                        <div className="text-sm text-gray-500">{proveedor.nombre}</div>
+                        <div className="font-medium text-orange-600">{proveedor.companyName}</div>
+                        <div className="text-sm text-gray-500">{proveedor.fullName}</div>
                       </div>
                     </div>
                   </TableCell>
@@ -216,18 +216,17 @@ export default function ProveedoresPage() {
                       </div>
                       <div className="flex items-center text-sm">
                         <Phone className="mr-2 h-3 w-3 text-gray-400" />
-                        {proveedor.telefono}
+                        {proveedor.phoneNumber}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{getTipoIngredienteBadge(proveedor.tipoIngrediente)}</TableCell>
+                  <TableCell>{getTipoIngredienteBadge(proveedor.typeIngredient)}</TableCell>
                   <TableCell>
-                    <div className="font-medium">{proveedor.compania}</div>
+                    <div className="font-medium">{proveedor.bussinessName}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-mono text-sm">{proveedor.cuitCuil}</div>
+                    <div className="font-mono text-sm">{proveedor.taxId}</div>
                   </TableCell>
-                  <TableCell>{new Date(proveedor.createdAt).toLocaleDateString("es-ES")}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
