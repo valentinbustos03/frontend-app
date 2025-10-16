@@ -196,7 +196,7 @@ export default function ProveedoresPage() {
             </TableHeader>
             <TableBody>
               {filteredProveedores.map((proveedor) => (
-                <TableRow key={proveedor.id} className="hover:bg-gray-50">
+                <TableRow key={proveedor.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">

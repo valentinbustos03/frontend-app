@@ -239,7 +239,7 @@ export default function MesasPage() {
             </TableHeader>
             <TableBody>
               {filteredMesas.map((mesa) => (
-                <TableRow key={mesa.id} className="hover:bg-gray-50">
+                <TableRow key={mesa.id}>
                   <TableCell>
                     <div className="font-medium text-orange-600">{mesa.cod}</div>
                   </TableCell>

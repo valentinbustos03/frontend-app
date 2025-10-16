@@ -259,7 +259,7 @@ export default function IngredientesPage() {
             </TableHeader>
             <TableBody>
               {filteredIngredientes.map((ingrediente) => (
-                <TableRow key={ingrediente.id} className="hover:bg-gray-50">
+                <TableRow key={ingrediente.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">

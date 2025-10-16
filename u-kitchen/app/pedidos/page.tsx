@@ -14,13 +14,16 @@ import { useToast } from "@/hooks/use-toast"
 import { pedidoService } from "@/services/pedido-service"
 import { type Pedido, PedidoEstado } from "@/types"
 
-const estadoLabels = {
+type EstadoLabel = Record<PedidoEstado, string>;
+
+const estadoLabels: EstadoLabel = {
   [PedidoEstado.PENDIENTE]: "Pendiente",
   [PedidoEstado.EN_PREPARACION]: "En Preparación",
   [PedidoEstado.LISTO]: "Listo",
   [PedidoEstado.ENTREGADO]: "Entregado",
   [PedidoEstado.CANCELADO]: "Cancelado",
-}
+  [PedidoEstado.RECHAZADO]: "Rechazado",
+};
 
 const estadoColors = {
   [PedidoEstado.PENDIENTE]: "bg-yellow-100 text-yellow-800",
@@ -28,6 +31,7 @@ const estadoColors = {
   [PedidoEstado.LISTO]: "bg-green-100 text-green-800",
   [PedidoEstado.ENTREGADO]: "bg-gray-100 text-gray-800",
   [PedidoEstado.CANCELADO]: "bg-red-100 text-red-800",
+  [PedidoEstado.RECHAZADO]: "bg-red-100 text-red-800",
 }
 
 const estadoIcons = {
@@ -36,6 +40,7 @@ const estadoIcons = {
   [PedidoEstado.LISTO]: CheckCircle,
   [PedidoEstado.ENTREGADO]: CheckCircle,
   [PedidoEstado.CANCELADO]: XCircle,
+  [PedidoEstado.RECHAZADO]: XCircle,
 }
 
 export default function PedidosPage() {
@@ -70,28 +75,28 @@ export default function PedidosPage() {
 
   const filteredPedidos = useMemo(() => {
     return pedidos.filter((pedido) => {
-      const matchesEstado = estadoFilter === "all" || pedido.estado === estadoFilter
+      const matchesEstado = estadoFilter === "all" || pedido.status === estadoFilter
 
-      const matchesFechaDesde = !fechaDesde || new Date(pedido.fechaHoraInicio) >= new Date(fechaDesde)
+      const matchesFechaDesde = !fechaDesde || new Date(pedido.startTime) >= new Date(fechaDesde)
 
-      const matchesFechaHasta = !fechaHasta || new Date(pedido.fechaHoraInicio) <= new Date(fechaHasta + "T23:59:59")
+      const matchesFechaHasta = !fechaHasta || new Date(pedido.startTime) <= new Date(fechaHasta + "T23:59:59")
 
       return matchesEstado && matchesFechaDesde && matchesFechaHasta
     })
   }, [pedidos, estadoFilter, fechaDesde, fechaHasta])
 
-  const handleUpdateEstado = async (pedido: Pedido, nuevoEstado: PedidoEstado) => {
+  const handleUpdateEstado = async (pedido: Pedido, nuevoEstado: PedidoEstado) => { 
     try {
-      const updatedPedido = await pedidoService.updatePedidoEstado(pedido.id, nuevoEstado)
-      setPedidos(pedidos.map((p) => (p.id === pedido.id ? updatedPedido : p)))
+      const updatedPedido = await pedidoService.updatePedidoEstado(pedido.orderId, nuevoEstado)
+      setPedidos(pedidos.map((p) => (p.orderId === pedido.orderId ? updatedPedido : p)))
       toast({
         title: "Estado actualizado",
-        description: `El pedido ${pedido.id} ahora está ${estadoLabels[nuevoEstado].toLowerCase()}`,
+        description: `El pedido ${pedido.orderId} ahora está ${estadoLabels[nuevoEstado].toLowerCase()}`,
       })
     } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo actualizar el estado del pedido",
+        description: "No se pudo actualizar el status del pedido",
         variant: "destructive",
       })
     }
@@ -104,8 +109,8 @@ export default function PedidosPage() {
     }).format(amount)
   }
 
-  const getEstadoIcon = (estado: PedidoEstado) => {
-    const Icon = estadoIcons[estado]
+  const getEstadoIcon = (status: PedidoEstado) => {
+    const Icon = estadoIcons[status]
     return <Icon className="h-4 w-4" />
   }
 
@@ -198,7 +203,7 @@ export default function PedidosPage() {
         <Card>
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-yellow-600">
-              {pedidos.filter((p) => p.estado === PedidoEstado.PENDIENTE).length}
+              {pedidos.filter((p) => p.status === PedidoEstado.PENDIENTE).length}
             </div>
             <p className="text-xs text-muted-foreground">Pendientes</p>
           </CardContent>
@@ -206,7 +211,7 @@ export default function PedidosPage() {
         <Card>
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-blue-600">
-              {pedidos.filter((p) => p.estado === PedidoEstado.EN_PREPARACION).length}
+              {pedidos.filter((p) => p.status === PedidoEstado.EN_PREPARACION).length}
             </div>
             <p className="text-xs text-muted-foreground">En Preparación</p>
           </CardContent>
@@ -214,7 +219,7 @@ export default function PedidosPage() {
         <Card>
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-green-600">
-              {pedidos.filter((p) => p.estado === PedidoEstado.LISTO).length}
+              {pedidos.filter((p) => p.status === PedidoEstado.LISTO).length}
             </div>
             <p className="text-xs text-muted-foreground">Listos</p>
           </CardContent>
@@ -245,42 +250,45 @@ export default function PedidosPage() {
             </TableHeader>
             <TableBody>
               {filteredPedidos.map((pedido) => (
-                <TableRow key={pedido.id} className="hover:bg-gray-50">
+                <TableRow key={pedido.orderId}>
                   <TableCell>
-                    <div className="font-medium text-orange-600">#{pedido.id}</div>
-                    <div className="text-sm text-gray-500">{pedido.productos.length} productos</div>
+                    <div className="font-medium text-orange-600">#{pedido.orderId}</div>
+                    <div className="text-sm text-gray-500">{pedido.orderItems.length} productos</div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{pedido.cliente.usuario.nombreApellido}</div>
-                    <div className="text-sm text-gray-500">{pedido.cliente.usuario.mail}</div>
+                    {/* <div className="font-medium">{pedido.client.usuario.nombreApellido}</div>
+                    <div className="text-sm text-gray-500">{pedido.client.usuario.mail}</div> */}
+                    <div className="font-medium">Nombre Apellido Cliente</div>
+                    <div className="text-sm text-gray-500">Mail Cliente</div>
                   </TableCell>
                   <TableCell>
-                    {pedido.mesa ? (
-                      <Badge variant="outline">{pedido.mesa.cod}</Badge>
+                    {pedido.table ? (
+                      <Badge variant="outline">{pedido.table.cod}</Badge>
                     ) : (
-                      <span className="text-gray-400">Sin mesa</span>
+                      <span className="text-gray-400">Sin table</span>
                     )}
                   </TableCell>
                   <TableCell>
-                    {pedido.mesero ? (
-                      <div className="text-sm">{pedido.mesero.nombre} {pedido.mesero.apellido}</div>
+                    {pedido.waiter ? (
+                      // <div className="text-sm">{pedido.waiter.nombre} {pedido.waiter.apellido}</div>
+                      <div className="text-sm">Nombre Apellido mozo</div>
                     ) : (
                       <span className="text-gray-400">Sin asignar</span>
                     )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
-                      {getEstadoIcon(pedido.estado)}
-                      <Badge className={`ml-2 ${estadoColors[pedido.estado]}`}>{estadoLabels[pedido.estado]}</Badge>
+                      {getEstadoIcon(pedido.status)}
+                      <Badge className={`ml-2 ${estadoColors[pedido.status]}`}>{estadoLabels[pedido.status]}</Badge>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">{formatCurrency(pedido.subtotal)}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">{new Date(pedido.fechaHoraInicio).toLocaleDateString("es-ES")}</div>
+                    <div className="text-sm">{new Date(pedido.startTime).toLocaleDateString("es-ES")}</div>
                     <div className="text-xs text-gray-500">
-                      {new Date(pedido.fechaHoraInicio).toLocaleTimeString("es-ES", {
+                      {new Date(pedido.startTime).toLocaleTimeString("es-ES", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
@@ -294,29 +302,29 @@ export default function PedidosPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/pedidos/${pedido.id}`)}>
+                        <DropdownMenuItem onClick={() => router.push(`/pedidos/${pedido.orderId}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalles
                         </DropdownMenuItem>
-                        {pedido.estado === PedidoEstado.PENDIENTE && (
+                        {pedido.status === PedidoEstado.PENDIENTE && (
                           <DropdownMenuItem onClick={() => handleUpdateEstado(pedido, PedidoEstado.EN_PREPARACION)}>
                             <AlertCircle className="mr-2 h-4 w-4" />
                             Iniciar Preparación
                           </DropdownMenuItem>
                         )}
-                        {pedido.estado === PedidoEstado.EN_PREPARACION && (
+                        {pedido.status === PedidoEstado.EN_PREPARACION && (
                           <DropdownMenuItem onClick={() => handleUpdateEstado(pedido, PedidoEstado.LISTO)}>
                             <CheckCircle className="mr-2 h-4 w-4" />
                             Marcar como Listo
                           </DropdownMenuItem>
                         )}
-                        {pedido.estado === PedidoEstado.LISTO && (
+                        {pedido.status === PedidoEstado.LISTO && (
                           <DropdownMenuItem onClick={() => handleUpdateEstado(pedido, PedidoEstado.ENTREGADO)}>
                             <CheckCircle className="mr-2 h-4 w-4" />
                             Marcar como Entregado
                           </DropdownMenuItem>
                         )}
-                        {pedido.estado !== PedidoEstado.CANCELADO && pedido.estado !== PedidoEstado.ENTREGADO && (
+                        {pedido.status !== PedidoEstado.CANCELADO && pedido.status !== PedidoEstado.ENTREGADO && (
                           <DropdownMenuItem
                             onClick={() => handleUpdateEstado(pedido, PedidoEstado.CANCELADO)}
                             className="text-red-600"

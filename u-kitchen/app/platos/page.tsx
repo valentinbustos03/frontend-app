@@ -214,7 +214,7 @@ export default function PlatosPage() {
             </TableHeader>
             <TableBody>
               {filteredPlatos.map((plato) => (
-                <TableRow key={plato.id} className="hover:bg-gray-50">
+                <TableRow key={plato.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <img
