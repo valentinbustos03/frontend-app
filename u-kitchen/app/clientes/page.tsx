@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { clienteService } from "@/services/cliente-service"
 import type { Cliente } from "@/types"
@@ -259,6 +259,9 @@ export default function ClientesPage() {
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <Avatar>
+                        {cliente.user?.profilePicture && (
+                          <AvatarImage src={cliente.user.profilePicture} alt={cliente.user.fullName || "Cliente"} />
+                        )}
                         <AvatarFallback className={getAvatarColor(cliente.user?.fullName || `DNI ${cliente.dni}`)}>
                           {getInitials(cliente.user?.fullName || `DNI ${cliente.dni}`)}
                         </AvatarFallback>

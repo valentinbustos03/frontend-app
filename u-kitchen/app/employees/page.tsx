@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Search, Edit, Trash2, Users, Clock, DollarSign } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { EmpleadoFormModal } from "@/components/forms/empleado-form-modal"
 import { Empleado, EmployeeRole, EmployeeShift } from "@/types"
 import { empleadoService } from "@/services/empleado-service"
@@ -13,6 +14,30 @@ import { empleadoService } from "@/services/empleado-service"
 const roleColors = {
   chef: "bg-red-500",
   waiter: "bg-blue-500",
+}
+
+const getInitials = (name: string) => {
+  return name
+    .split(" ")
+    .map((n) => n.charAt(0))
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+const getAvatarColor = (name: string) => {
+  const colors = [
+    "bg-red-500",
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-yellow-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+    "bg-teal-500",
+  ]
+  const index = name.charCodeAt(0) % colors.length
+  return colors[index]
 }
 
 export default function EmpleadosPage() {
@@ -220,13 +245,23 @@ export default function EmpleadosPage() {
           <Card key={empleado.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">
-                    {empleado.user?.fullName}
-                  </CardTitle>
-                  <CardDescription>
-                    {empleado.taxId}
-                  </CardDescription>
+                <div className="flex items-center space-x-3">
+                  <Avatar className="h-10 w-10">
+                    {empleado.user?.profilePicture && (
+                      <AvatarImage src={empleado.user.profilePicture} alt={empleado.user.fullName || "Empleado"} />
+                    )}
+                    <AvatarFallback className={getAvatarColor(empleado.user?.fullName || empleado.taxId)}>
+                      {getInitials(empleado.user?.fullName || empleado.taxId)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <CardTitle className="text-lg">
+                      {empleado.user?.fullName}
+                    </CardTitle>
+                    <CardDescription>
+                      {empleado.taxId}
+                    </CardDescription>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm" onClick={() => handleEditEmpleado(empleado)}>
