@@ -302,7 +302,7 @@ export default function ClientesPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/clientes/${cliente.id}`)}>
+                        <DropdownMenuItem disabled={true} onClick={() => router.push(`/clientes/${cliente.id}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalles
                         </DropdownMenuItem>

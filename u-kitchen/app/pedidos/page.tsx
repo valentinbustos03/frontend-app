@@ -302,7 +302,7 @@ export default function PedidosPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/pedidos/${pedido.orderId}`)}>
+                        <DropdownMenuItem  disabled={true} onClick={() => router.push(`/pedidos/${pedido.orderId}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalles
                         </DropdownMenuItem>

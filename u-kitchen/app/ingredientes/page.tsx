@@ -307,7 +307,7 @@ export default function IngredientesPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/ingredientes/${ingrediente.id}`)}>
+                        <DropdownMenuItem  disabled={true} onClick={() => router.push(`/ingredientes/${ingrediente.id}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalles
                         </DropdownMenuItem>

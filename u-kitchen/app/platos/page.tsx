@@ -265,7 +265,7 @@ export default function PlatosPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/platos/${plato.id}`)}>
+                        <DropdownMenuItem disabled={true} onClick={() => router.push(`/platos/${plato.id}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalles
                         </DropdownMenuItem>
