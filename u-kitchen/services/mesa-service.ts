@@ -37,7 +37,8 @@ class MesaService {
 
   async createMesa(mesa: CreateMesaRequest): Promise<Mesa> {
     try {
-      return await api.post<Mesa>('/table/add', mesa);
+      const payload = { ...mesa };
+      return await api.post<Mesa>('/table/add', payload);
     } catch (error) {
       console.error("Error creating mesa:", error)
       throw error
@@ -46,7 +47,8 @@ class MesaService {
 
   async updateMesa(id: string, mesa: Partial<CreateMesaRequest>): Promise<UpdateMesaResponse> {
     try {
-      return await api.put<UpdateMesaResponse>(`/table/${id}`, mesa);
+      const payload = { ...mesa };
+      return await api.put<UpdateMesaResponse>(`/table/${id}`, payload);
     } catch (error) {
       console.error("Error updating mesa:", error)
       throw error
@@ -64,10 +66,11 @@ class MesaService {
 
   async toggleOcupada(mesa: Mesa): Promise<UpdateMesaResponse> {
     try {
-      return await this.updateMesa(mesa.id, { 
+      const payload = { 
         ...mesa, 
-        occupied: !mesa.occupied 
-      });
+        occupied: !mesa.occupied,
+      };
+      return await api.put<UpdateMesaResponse>(`/table/${mesa.id}`, payload);
     } catch (error) {
       console.error("Error toggling mesa ocupada:", error)
       throw error

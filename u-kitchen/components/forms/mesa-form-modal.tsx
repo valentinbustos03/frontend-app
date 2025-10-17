@@ -106,7 +106,10 @@ export function MesaFormModal({ open, onOpenChange, mesa, onSuccess }: MesaFormM
             <Label htmlFor="cod">Código</Label>
             <Input 
               id="cod" 
-              {...register("cod", { required: "El código es requerido" })} 
+              {...register("cod", { 
+                required: "El código es requerido",
+                minLength: { value: 1, message: "El código debe tener al menos 1 carácter" }
+              })} 
               placeholder="M001" 
             />
             {errors.cod && <p className="text-sm text-destructive">{errors.cod.message}</p>}
@@ -139,7 +142,10 @@ export function MesaFormModal({ open, onOpenChange, mesa, onSuccess }: MesaFormM
             <Label htmlFor="sector">Sector</Label>
             <Input 
               id="sector" 
-              {...register("sector", { required: "El sector es requerido" })} 
+              {...register("sector", { 
+                required: "El sector es requerido",
+                minLength: { value: 1, message: "El sector debe tener al menos 1 carácter" }
+              })} 
               placeholder="terraza, salón, etc." 
             />
             {errors.sector && <p className="text-sm text-destructive">{errors.sector.message}</p>}
