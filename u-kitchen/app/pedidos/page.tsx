@@ -87,7 +87,8 @@ export default function PedidosPage() {
 
   const handleUpdateEstado = async (pedido: Pedido, nuevoEstado: PedidoEstado) => { 
     try {
-      const updatedPedido = await pedidoService.updatePedidoEstado(pedido.orderId, nuevoEstado)
+      const newPedido = {pedido, ...{status: nuevoEstado}}
+      const updatedPedido = await pedidoService.updatePedido(pedido.orderId, newPedido)
       setPedidos(pedidos.map((p) => (p.orderId === pedido.orderId ? updatedPedido : p)))
       toast({
         title: "Estado actualizado",
@@ -145,7 +146,7 @@ export default function PedidosPage() {
           <h1 className="text-3xl font-bold text-orange-600">Gestión de Pedidos</h1>
           <p className="text-gray-600">Administra todos los pedidos del restaurante</p>
         </div>
-        <Button className="text-white bg-orange-600 hover:bg-orange-700">
+        <Button disabled={true} className="text-white bg-orange-600 hover:bg-orange-700">
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Pedido
         </Button>
@@ -256,22 +257,19 @@ export default function PedidosPage() {
                     <div className="text-sm text-gray-500">{pedido.orderItems.length} productos</div>
                   </TableCell>
                   <TableCell>
-                    {/* <div className="font-medium">{pedido.client.usuario.nombreApellido}</div>
-                    <div className="text-sm text-gray-500">{pedido.client.usuario.mail}</div> */}
-                    <div className="font-medium">Nombre Apellido Cliente</div>
-                    <div className="text-sm text-gray-500">Mail Cliente</div>
+                    <div className="font-medium">{pedido.client?.user?.fullName || "Cliente sin nombre"}</div>
+                    <div className="text-sm text-gray-500">{pedido.client?.user?.email || "Sin email"}</div>
                   </TableCell>
                   <TableCell>
                     {pedido.table ? (
                       <Badge variant="outline">{pedido.table.cod}</Badge>
                     ) : (
-                      <span className="text-gray-400">Sin table</span>
+                      <span className="text-gray-400">Sin mesa</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {pedido.waiter ? (
-                      // <div className="text-sm">{pedido.waiter.nombre} {pedido.waiter.apellido}</div>
-                      <div className="text-sm">Nombre Apellido mozo</div>
+                      <div className="text-sm">{pedido.waiter.user?.fullName || "Mesero sin nombre"}</div>
                     ) : (
                       <span className="text-gray-400">Sin asignar</span>
                     )}
@@ -302,30 +300,31 @@ export default function PedidosPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem  disabled={true} onClick={() => router.push(`/pedidos/${pedido.orderId}`)}>
+                        <DropdownMenuItem disabled={true} onClick={() => router.push(`/pedidos/${pedido.orderId}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalles
                         </DropdownMenuItem>
                         {pedido.status === PedidoEstado.PENDIENTE && (
-                          <DropdownMenuItem onClick={() => handleUpdateEstado(pedido, PedidoEstado.EN_PREPARACION)}>
+                          <DropdownMenuItem disabled={true} onClick={() => handleUpdateEstado(pedido, PedidoEstado.EN_PREPARACION)}>
                             <AlertCircle className="mr-2 h-4 w-4" />
                             Iniciar Preparación
                           </DropdownMenuItem>
                         )}
                         {pedido.status === PedidoEstado.EN_PREPARACION && (
-                          <DropdownMenuItem onClick={() => handleUpdateEstado(pedido, PedidoEstado.LISTO)}>
+                          <DropdownMenuItem disabled={true} onClick={() => handleUpdateEstado(pedido, PedidoEstado.LISTO)}>
                             <CheckCircle className="mr-2 h-4 w-4" />
                             Marcar como Listo
                           </DropdownMenuItem>
                         )}
                         {pedido.status === PedidoEstado.LISTO && (
-                          <DropdownMenuItem onClick={() => handleUpdateEstado(pedido, PedidoEstado.ENTREGADO)}>
+                          <DropdownMenuItem disabled={true} onClick={() => handleUpdateEstado(pedido, PedidoEstado.ENTREGADO)}>
                             <CheckCircle className="mr-2 h-4 w-4" />
                             Marcar como Entregado
                           </DropdownMenuItem>
                         )}
                         {pedido.status !== PedidoEstado.CANCELADO && pedido.status !== PedidoEstado.ENTREGADO && (
                           <DropdownMenuItem
+                            disabled={true}
                             onClick={() => handleUpdateEstado(pedido, PedidoEstado.CANCELADO)}
                             className="text-red-600"
                           >

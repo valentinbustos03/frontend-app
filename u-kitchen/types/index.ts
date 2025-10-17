@@ -246,6 +246,9 @@ export interface CreatePedidoRequest {
   table: {
     id: string;
   };
+  waiter: {
+    id: string;
+  }
 }
 
 // ============= RESERVA =============

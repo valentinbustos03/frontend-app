@@ -1,7 +1,12 @@
 import type { Pedido, CreatePedidoRequest, PedidoFilters, PaginatedResponse, PedidoEstado } from "@/types"
 import { api } from "@/lib/api"
 
-class PedidoService {
+interface ApiResponse<T> {
+  message: string
+  data: T
+}
+
+class PedidoService { 
   async getPedidos(filters?: PedidoFilters): Promise<PaginatedResponse<Pedido>> {
     try {
       const params = new URLSearchParams()
@@ -32,7 +37,8 @@ class PedidoService {
 
   async createPedido(pedido: CreatePedidoRequest): Promise<Pedido> {
     try {
-      return await api.post<Pedido>('/order/add', pedido);
+      const response = await api.post<ApiResponse<Pedido>>('/order/add', pedido);
+      return response.data
     } catch (error) {
       console.error("Error creating pedido:", error)
       throw error
@@ -41,7 +47,8 @@ class PedidoService {
 
   async updatePedido(id: string, pedido: Partial<CreatePedidoRequest>): Promise<Pedido> {
     try {
-      return await api.put<Pedido>(`/order/${id}`, pedido);
+      const response = await api.put<ApiResponse<Pedido>>(`/order/${id}`, pedido);
+      return response.data
     } catch (error) {
       console.error("Error updating pedido:", error)
       throw error

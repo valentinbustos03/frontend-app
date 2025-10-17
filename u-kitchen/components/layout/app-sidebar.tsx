@@ -151,9 +151,10 @@ export function AppSidebar() {
   const pathname = usePathname()
   const { user, isAdmin, isCliente, isEmpleado } = useAuth()
 
-  const currentRole = user?.role === 'admin' ? 'admin' : 
-                     (isCliente ? 'cliente' : 
-                     (isEmpleado ? 'empleado' : 'guest'))
+  // const currentRole = user?.role === 'admin' ? 'admin' : 
+  //                    (isCliente ? 'cliente' : 
+  //                    (isEmpleado ? 'empleado' : 'guest'))
+  const currentRole = 'admin';
 
   // Filtrar ítems permitidos por rol
   const filteredMenuItems = menuItems.map(group => ({

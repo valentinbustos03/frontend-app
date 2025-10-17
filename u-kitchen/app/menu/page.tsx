@@ -7,8 +7,26 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Star, ShoppingCart, Trash2 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Plato } from "@/types" // Asumiendo que la interfaz está en types
 import { platoService } from "@/services/plato-service"
+import { mesaService } from "@/services/mesa-service"
+import { empleadoService } from "@/services/empleado-service"
+import { pedidoService } from "@/services/pedido-service"
+import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/use-auth"
+import type { Mesa, Empleado } from "@/types"
+import { EmployeeRole } from "@/types"
+import { PedidoEstado } from "@/types"
 
 export default function MenuPage() {
   const [platos, setPlatos] = useState<Plato[]>([])
@@ -18,8 +36,20 @@ export default function MenuPage() {
   const [sortBy, setSortBy] = useState<"none" | "price-asc" | "price-desc" | "calification-desc">("none")
   const [cart, setCart] = useState<{ [key: string]: number }>({})
 
+  // Para el modal de confirmación
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [mesas, setMesas] = useState<Mesa[]>([])
+  const [waiters, setWaiters] = useState<Empleado[]>([])
+  const [selectedMesaId, setSelectedMesaId] = useState<string>("")
+  const [selectedWaiterId, setSelectedWaiterId] = useState<string>("")
+  const [description, setDescription] = useState("")
+
+  const { user, isCliente } = useAuth()
+  const { toast } = useToast()
+
   useEffect(() => {
     loadPlatos()
+    loadMesasAndWaiters()
   }, [])
 
   const loadPlatos = async () => {
@@ -31,6 +61,25 @@ export default function MenuPage() {
       console.error("Error loading platos:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadMesasAndWaiters = async () => {
+    try {
+      const [mesasResponse, empleadosResponse] = await Promise.all([
+        mesaService.getMesas(),
+        empleadoService.getEmpleados()
+      ])
+      setMesas(mesasResponse.data)
+      // Filtrar solo meseros (role WAITER)
+      setWaiters(empleadosResponse.data.filter((emp: Empleado) => emp.role === EmployeeRole.WAITER))
+    } catch (error) {
+      console.error("Error loading mesas/waiters:", error)
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar mesas o meseros",
+        variant: "destructive",
+      })
     }
   }
 
@@ -88,9 +137,66 @@ export default function MenuPage() {
   }, [cart, platos])
 
   const confirmOrder = () => {
-    console.log("Confirmar pedido:", cart)
-    // Aquí integrar con servicio de pedidos si es necesario
-    alert("Pedido confirmado!")
+    if (Object.keys(cart).length === 0) {
+      toast({
+        title: "Carrito vacío",
+        description: "Agrega al menos un plato al carrito",
+        variant: "destructive",
+      })
+      return
+    }
+    setShowConfirmModal(true)
+  }
+
+  const createPedido = async () => {
+    if (!selectedMesaId || !selectedWaiterId || !isCliente) {
+      toast({
+        title: "Datos incompletos",
+        description: "Selecciona mesa, mesero y asegúrate de estar logueado como cliente",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const orderItems = Object.entries(cart).map(([dishId, quantity]) => ({
+        dish: { id: dishId },
+        quantity,
+      }))
+
+      const clientId = user?.client?.id
+
+      const pedidoData = {
+        description,
+        status: PedidoEstado.PENDIENTE,
+        estimatedEndTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 min estimado
+        endTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // Momentaneamente (hay que modificar backend)
+        orderItems,
+        client: { id: clientId! },
+        table: { id: selectedMesaId },
+        waiter: { id: selectedWaiterId }
+      }
+
+      const newPedido = await pedidoService.createPedido(pedidoData)
+      toast({
+        title: "Pedido creado",
+        description: `Tu pedido #${newPedido.orderId} ha sido creado exitosamente`,
+      })
+
+      // Limpiar carrito y cerrar modal
+      setCart({})
+      setShowConfirmModal(false)
+      setDescription("")
+      setSelectedMesaId("")
+      setSelectedWaiterId("")
+    } catch (error) {
+      console.error("Error creating pedido:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo crear el pedido",
+        variant: "destructive",
+      })
+    }
   }
 
   if (loading) {
@@ -288,6 +394,67 @@ export default function MenuPage() {
           </div>
         </div>
       )}
+
+      {/* Modal de confirmación */}
+      <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Pedido</DialogTitle>
+            <DialogDescription>
+              Selecciona la mesa y el mesero para tu pedido. Agrega una descripción si lo deseas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="mesa">Mesa</Label>
+              <Select value={selectedMesaId} onValueChange={setSelectedMesaId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona una mesa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mesas.map((mesa) => (
+                    <SelectItem key={mesa.id} value={mesa.id}>
+                      Mesa {mesa.cod} - {mesa.capacity} personas
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="waiter">Mesero</Label>
+              <Select value={selectedWaiterId} onValueChange={setSelectedWaiterId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un mesero" />
+                </SelectTrigger>
+                <SelectContent>
+                  {waiters.map((waiter) => (
+                    <SelectItem key={waiter.id} value={waiter.id}>
+                      {waiter.user?.fullName || "Mesero sin nombre"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Descripción (opcional)</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Ej: Sin sal, preferencia por mesa al lado de la ventana"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowConfirmModal(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={createPedido} disabled={!selectedMesaId || !selectedWaiterId}>
+              Crear Pedido
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
