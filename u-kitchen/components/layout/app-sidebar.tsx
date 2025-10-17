@@ -29,8 +29,22 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/hooks/use-auth"
 
-const menuItems = [
+interface MenuItem {
+  label: string;
+  icon: React.ComponentType<any>;
+  href: string;
+  allowedFor: readonly ("admin" | "cliente" | "empleado")[];
+  disabled?: boolean;
+}
+
+interface MenuGroup {
+  title: string;
+  items: MenuItem[];
+}
+
+const menuItems: MenuGroup[] = [
   {
     title: "General",
     items: [
@@ -38,11 +52,13 @@ const menuItems = [
         label: "Dashboard",
         icon: LayoutDashboard,
         href: "/",
+        allowedFor: ["admin", "empleado"],
       },
       {
         label: "Menu",
         icon: BookOpen,
         href: "/menu",
+        allowedFor: ["admin", "cliente", "empleado"],
       },
     ],
   },
@@ -53,11 +69,13 @@ const menuItems = [
         label: "Clientes",
         icon: Users,
         href: "/clientes",
+        allowedFor: ["admin"],
       },
       {
         label: "Empleados",
         icon: Users,
         href: "/employees",
+        allowedFor: ["admin"],
       },
     ],
   },
@@ -68,16 +86,20 @@ const menuItems = [
         label: "Mesas",
         icon: UtensilsCrossed,
         href: "/mesas",
+        allowedFor: ["admin", "empleado"],
       },
       {
         label: "Pedidos",
         icon: ShoppingCart,
         href: "/pedidos",
+        allowedFor: ["admin", "empleado"],
       },
       {
         label: "Reservas",
         icon: Calendar,
         href: "/reservas",
+        disabled: true,
+        allowedFor: ["admin", "empleado"],
       },
     ],
   },
@@ -88,16 +110,19 @@ const menuItems = [
         label: "Proveedores",
         icon: Truck,
         href: "/proveedores",
+        allowedFor: ["admin", "empleado"],
       },
       {
         label: "Ingredientes",
         icon: Wheat,
         href: "/ingredientes",
+        allowedFor: ["admin", "empleado"],
       },
       {
         label: "Platos",
         icon: ChefHat,
         href: "/platos",
+        allowedFor: ["admin", "empleado"],
       },
     ],
   },
@@ -108,11 +133,15 @@ const menuItems = [
         label: "Reportes",
         icon: BarChart3,
         href: "/reports",
+        disabled: true,
+        allowedFor: ["admin"],
       },
       {
         label: "Configuración",
         icon: Settings,
         href: "/settings",
+        disabled: true,
+        allowedFor: ["admin"],
       },
     ],
   },
@@ -120,6 +149,17 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const { user, isAdmin, isCliente, isEmpleado } = useAuth()
+
+  const currentRole = user?.role === 'admin' ? 'admin' : 
+                     (isCliente ? 'cliente' : 
+                     (isEmpleado ? 'empleado' : 'guest'))
+
+  // Filtrar ítems permitidos por rol
+  const filteredMenuItems = menuItems.map(group => ({
+    ...group,
+    items: group.items.filter(item => item.allowedFor.includes(currentRole as any))
+  })).filter(group => group.items.length > 0) // Ocultar grupos vacíos
 
   return (
     <Sidebar collapsible="icon">
@@ -130,7 +170,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        {menuItems.map((group) => (
+        {filteredMenuItems.map((group) => (
           <SidebarGroup key={group.title}>
             <SidebarGroupLabel className="text-white">{group.title}</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -138,15 +178,25 @@ export function AppSidebar() {
                 {group.items.map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+                  const isDisabled = item.disabled
 
                   return (
                     <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild isActive={isActive}>
-                        <Link href={item.href}>
-                          <Icon className="text-orange-600" />
-                          <span>{item.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
+                      {isDisabled ? (
+                        <SidebarMenuButton asChild isActive={isActive}>
+                          <div className="flex items-center rounded-md px-2 py-1.5 text-sm font-medium cursor-not-allowed opacity-50 text-muted-foreground hover:bg-transparent pointer-events-none">
+                            <Icon className="text-gray-500 opacity-50 mr-2 h-4 w-4" />
+                            <span>{item.label}</span>
+                          </div>
+                        </SidebarMenuButton>
+                      ) : (
+                        <SidebarMenuButton asChild isActive={isActive}>
+                          <Link href={item.href}>
+                            <Icon className="text-orange-600" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      )}
                     </SidebarMenuItem>
                   )
                 })}

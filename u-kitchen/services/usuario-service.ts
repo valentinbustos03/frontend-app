@@ -29,7 +29,8 @@ class UserService {
 
   async getUsuarioById(id: string): Promise<Usuario> {
     try {
-      return await api.get<Usuario>(`/user/id/${id}`)
+      const response = await api.get<ApiResponse<Usuario>>(`/user/id/${id}`)
+      return response.data
     } catch (error) {
       console.error("Error fetching usuario:", error)
       throw error

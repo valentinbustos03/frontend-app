@@ -1,166 +1,127 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Users, DollarSign, Clock, TrendingUp } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { empleadoService } from "@/services/empleado-service"
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, User, Briefcase } from "lucide-react";
+import { userService } from "@/services/usuario-service";
+import type { Usuario } from "@/types";
 
-interface DashboardStats {
-  totalEmployees: number
-  activeEmployees: number
-  averageSalary: number
-  newHiresThisMonth: number
-}
-
-export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalEmployees: 0,
-    activeEmployees: 0,
-    averageSalary: 0,
-    newHiresThisMonth: 0,
-  })
-  const [loading, setLoading] = useState(true)
+export default function LoginPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadDashboardData()
-  }, [])
-
-  const loadDashboardData = async () => {
-    try {
-      const response = await empleadoService.getEmpleados()
-      const employees = response.data
-
-      const totalEmployees = employees.length
-      const activeEmployees = employees.length
-      const averageSalary = employees.reduce((sum, emp) => sum + (emp?.salary ?? 0), 0) / totalEmployees
-
-      const currentMonth = new Date().getMonth()
-      const currentYear = new Date().getFullYear()
-      const newHiresThisMonth = employees.filter((emp) => {
-        // const hireDate = new Date(emp.createdAt)
-        const hireDate = new Date()
-        return hireDate.getMonth() === currentMonth && hireDate.getFullYear() === currentYear
-      }).length
-
-      setStats({
-        totalEmployees,
-        activeEmployees,
-        averageSalary,
-        newHiresThisMonth,
-      })
-    } catch (error) {
-      console.error("Error loading dashboard data:", error)
-    } finally {
-      setLoading(false)
+    const loggedInUser = localStorage.getItem("loggedInUser");
+    if (loggedInUser) {
+      router.replace("/dashboard");
     }
-  }
+  }, [router]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("es-ES", {
-      style: "currency",
-      currency: "ARS",
-    }).format(amount)
-  }
+  const handleLoginAsRole = async (role: "admin" | "cliente" | "empleado") => {
+    setLoading(true);
+    try {
+      let userId: string;
+      switch (role) {
+        case "admin":
+          userId = "1956859782010769570";
+          break;
+        case "cliente":
+          userId = "1956872646238933172";
+          break;
+        case "empleado":
+          userId = "1956874564491284676";
+          break;
+        default:
+          throw new Error("Rol inválido");
+      }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
-      </div>
-    )
-  }
+      const user: Usuario = await userService.getUsuarioById(userId);
+      
+      // Guardar en localStorage
+      localStorage.setItem("loggedInUser", JSON.stringify({
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        profilePicture: user.profilePicture,
+        ...(user.client && { client: user.client }),
+        ...(user.employee && { employee: user.employee }),
+      }));
+
+      router.refresh();
+
+      switch (user.role) {
+        case "admin":
+          router.replace("/dashboard"); 
+          break;
+        case "user":
+          if (user.client) {
+            router.replace("/menu"); 
+          } else if (user.employee) {
+            router.replace("/pedidos"); 
+          }
+          break;
+        default:
+          router.replace("/dashboard");
+      }
+    } catch (error) {
+      console.error("Error al cargar usuario:", error);
+      alert("Error al iniciar sesión. Intenta nuevamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-orange-600">Dashboard</h1>
-        <p className="text-gray-300">Resumen general del restaurante</p>
+    <div className="h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-bold text-orange-600">Bienvenido a U Kitchen</h2>
+          <p className="mt-2 text-center text-sm text-gray-300">
+            Selecciona tu rol para ingresar
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleLoginAsRole("admin")}>
+            <CardHeader className="flex flex-row items-center space-x-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
+                <Users className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Ingresar como Admin</CardTitle>
+                <CardDescription>Acceso completo al sistema</CardDescription>
+              </div>
+            </CardHeader>
+          </Card>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleLoginAsRole("cliente")}>
+            <CardHeader className="flex flex-row items-center space-x-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                <User className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Ingresar como Cliente</CardTitle>
+                <CardDescription>Gestión de pedidos y reservas</CardDescription>
+              </div>
+            </CardHeader>
+          </Card>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleLoginAsRole("empleado")}>
+            <CardHeader className="flex flex-row items-center space-x-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                <Briefcase className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Ingresar como Empleado</CardTitle>
+                <CardDescription>Gestión operativa del restaurante</CardDescription>
+              </div>
+            </CardHeader>
+          </Card>
+        </div>
+        {loading && (
+          <div className="text-center text-sm text-gray-600">Cargando...</div>
+        )}
       </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Empleados</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalEmployees}</div>
-            <p className="text-xs text-muted-foreground">{stats.activeEmployees} activos</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Empleados Activos</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeEmployees}</div>
-            <p className="text-xs text-muted-foreground">
-              {((stats.activeEmployees / stats.totalEmployees) * 100).toFixed(1)}% del total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Salario Promedio</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.averageSalary)}</div>
-            <p className="text-xs text-muted-foreground">Por empleado</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nuevas Contrataciones</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.newHiresThisMonth}</div>
-            <p className="text-xs text-muted-foreground">Este mes</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Welcome Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Bienvenido al Sistema de Gestión del Restaurante</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <p className="text-gray-300">
-              Este sistema te permite gestionar todos los aspectos de tu restaurante de manera eficiente.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="p-4 border rounded-lg">
-                <h3 className="font-semibold text-orange-600 mb-2">Gestión de Empleados</h3>
-                <p className="text-sm text-gray-300">
-                  Administra la información de tu personal, controla horarios y gestiona nóminas.
-                </p>
-              </div>
-
-              <div className="p-4 border rounded-lg">
-                <h3 className="font-semibold text-orange-600 mb-2">Control de Inventario</h3>
-                <p className="text-sm text-gray-300">Mantén un registro detallado de ingredientes y suministros.</p>
-              </div>
-
-              <div className="p-4 border rounded-lg">
-                <h3 className="font-semibold text-orange-600 mb-2">Gestión de Órdenes</h3>
-                <p className="text-sm text-gray-300">
-                  Procesa pedidos de manera eficiente y mantén a tus clientes satisfechos.
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
-  )
+  );
 }
