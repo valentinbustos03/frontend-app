@@ -1,6 +1,11 @@
 import type { Ingrediente, CreateIngredienteRequest, IngredienteFilters, PaginatedResponse } from "@/types"
 import { api } from "@/lib/api"
 
+interface UpdateIngredienteResponse {
+  message: string;
+  data: Ingrediente;
+}
+
 class IngredienteService {
   async getIngredientes(filters?: IngredienteFilters): Promise<PaginatedResponse<Ingrediente>> {
     try {
@@ -13,7 +18,8 @@ class IngredienteService {
         })
       }
       
-      const endpoint = `/ingredient/findAll${params.toString() ? `?${params.toString()}` : ''}`;
+      const endpoint = `/ingredient/findAll?includeDetails=true`;
+      // ${params.toString() ? `?${params.toString()}` : ''}
       return await api.get<PaginatedResponse<Ingrediente>>(endpoint);
     } catch (error) {
       console.error("Error fetching ingredientes:", error)
@@ -32,7 +38,8 @@ class IngredienteService {
 
   async createIngrediente(ingrediente: CreateIngredienteRequest): Promise<Ingrediente> {
     try {
-      return await api.post<Ingrediente>('/ingredient/add', ingrediente);
+      const response = await api.post<{message: string, data: Ingrediente}>('/ingredient/add', ingrediente);
+      return response.data;
     } catch (error) {
       console.error("Error creating ingrediente:", error)
       throw error
@@ -41,7 +48,8 @@ class IngredienteService {
 
   async updateIngrediente(id: string, ingrediente: Partial<CreateIngredienteRequest>): Promise<Ingrediente> {
     try {
-      return await api.put<Ingrediente>(`/ingredient/${id}`, ingrediente);
+      const response = await api.put<UpdateIngredienteResponse>(`/ingredient/${id}`, ingrediente);
+      return response.data;
     } catch (error) {
       console.error("Error updating ingrediente:", error)
       throw error
@@ -53,15 +61,6 @@ class IngredienteService {
       await api.delete<void>(`/ingredient/${id}`);
     } catch (error) {
       console.error("Error deleting ingrediente:", error)
-      throw error
-    }
-  }
-
-  async updateStock(id: string, nuevoStock: number): Promise<Ingrediente> {
-    try {
-      return await api.put<Ingrediente>(`/ingredient/${id}/stock`, { stock: nuevoStock });
-    } catch (error) {
-      console.error("Error updating stock:", error)
       throw error
     }
   }
