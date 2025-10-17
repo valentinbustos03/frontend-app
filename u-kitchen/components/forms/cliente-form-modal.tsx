@@ -59,7 +59,7 @@ export function ClienteFormModal({ open, onOpenChange, cliente, onSuccess }: Cli
         penalty: cliente.penalty,
         email: cliente.user?.email || "",
         fullName: cliente.user?.fullName || "",
-        password: "",  // Siempre vacío para edit
+        password: cliente.user?.password || "",
         phoneNumber: cliente.user?.phoneNumber || "",
       } : {
         dni: 0,
