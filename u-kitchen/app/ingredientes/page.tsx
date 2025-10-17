@@ -17,7 +17,7 @@ import { IngredienteFormModal } from "@/components/forms/ingrediente-form-modal"
 const unidadMedidaLabels: { [key in UnidadMedida]: string } = {
   [UnidadMedida.KILOGRAMOS]: "kg",
   [UnidadMedida.GRAMOS]: "g",
-  [UnidadMedida.LITROS]: "lt",
+  [UnidadMedida.LITROS]: "L",
   [UnidadMedida.MILILITROS]: "ml",
   [UnidadMedida.UNIDADES]: "unidades",
   [UnidadMedida.PIEZAS]: "piezas",
@@ -95,7 +95,8 @@ export default function IngredientesPage() {
 
   const handleUpdateStock = async (ingrediente: Ingrediente, nuevoStock: number) => {
     try {
-      const updatedIngrediente = await ingredienteService.updateStock(ingrediente.id, nuevoStock)
+      const updateData = {...ingrediente, stock: nuevoStock }
+      const updatedIngrediente = await ingredienteService.updateIngrediente(ingrediente.id, updateData)
       setIngredientes(ingredientes.map((i) => (i.id === ingrediente.id ? updatedIngrediente : i)))
       toast({
         title: "Stock actualizado",
@@ -235,9 +236,9 @@ export default function IngredientesPage() {
         </Card>
         <Card>
           <CardContent className="p-6">
-            {/* <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold">
               {ingredientes.reduce((sum, i) => sum + i.suppliers.length, 0)}
-            </div> */}
+            </div>
             <p className="text-xs text-muted-foreground">Total Proveedores</p>
           </CardContent>
         </Card>
@@ -282,7 +283,7 @@ export default function IngredientesPage() {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      {/* {ingrediente.suppliers.length > 0 ? (
+                      {ingrediente.suppliers.length > 0 ? (
                         <div>
                           <div className="font-medium">{ingrediente.suppliers[0].companyName}</div>
                           {ingrediente.suppliers.length > 1 && (
@@ -291,9 +292,7 @@ export default function IngredientesPage() {
                         </div>
                       ) : (
                         <span className="text-gray-400">Sin proveedores</span> 
-                      )} */}
-                        <span className="text-gray-400">Sin proveedores</span>
-
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
