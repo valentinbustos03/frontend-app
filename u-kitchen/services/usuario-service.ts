@@ -1,4 +1,4 @@
-import type { Usuario, CreateUsuarioRequest } from "@/types"
+import type { Usuario, CreateUsuarioRequest } from "@/types/usuario.types"
 import { api } from "@/lib/api"
 
 interface ApiResponse<T> {

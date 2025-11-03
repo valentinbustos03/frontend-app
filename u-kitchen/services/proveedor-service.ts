@@ -1,4 +1,5 @@
-import type { Proveedor, CreateProveedorRequest, ProveedorFilters, PaginatedResponse } from "@/types"
+import type { Proveedor, CreateProveedorRequest, ProveedorFilters } from "@/types/proveedor.types"
+import { PaginatedResponse } from "@/types/common.types";
 import { api } from "@/lib/api"
 
 class ProveedorService {

@@ -16,8 +16,9 @@ import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
 import { clienteService } from "@/services/cliente-service"
 import { userService } from "@/services/usuario-service"
-import type { Cliente, CreateClienteRequest, Usuario, CreateUsuarioRequest } from "@/types"
-import { UserRole as UserRoleEnum } from "@/types"
+import type { CreateUsuarioRequest } from "@/types/usuario.types"
+import type { Cliente, CreateClienteRequest } from "@/types/cliente.types"
+import { UserRole as UserRoleEnum } from "@/types/usuario.types"
 
 interface FormData extends CreateClienteRequest {
   email: string

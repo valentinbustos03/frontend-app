@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { ingredienteService } from "@/services/ingrediente-service"
-import { type Ingrediente, UnidadMedida } from "@/types"
+import { type Ingrediente, UnidadMedida } from "@/types/ingrediente.types"
 import { IngredienteFormModal } from "@/components/forms/ingrediente-form-modal"
 
 const unidadMedidaLabels: { [key in UnidadMedida]: string } = {

@@ -16,7 +16,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "@/hooks/use-toast"
 import { useForm, Controller } from "react-hook-form"
-import type { Plato, CreatePlatoRequest, Ingrediente, Empleado } from "@/types"
+import type { Plato, CreatePlatoRequest } from "@/types/plato.types"
+import type { Ingrediente } from "@/types/ingrediente.types"
+import type { Empleado } from "@/types/empleado.types"
 import { platoService } from "@/services/plato-service"
 import { ingredienteService } from "@/services/ingrediente-service"
 import { empleadoService } from "@/services/empleado-service"
@@ -27,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { EmployeeRole } from "@/types" // Assuming EmployeeRole is exported from types
+import { EmployeeRole } from "@/types/empleado.types"
 
 interface PlatoFormModalProps {
   open: boolean

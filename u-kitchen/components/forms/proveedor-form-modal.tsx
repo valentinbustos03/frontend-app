@@ -19,7 +19,7 @@ import { proveedorService } from "@/services/proveedor-service"
 import type { 
   Proveedor, 
   CreateProveedorRequest 
-} from "@/types"
+} from "@/types/proveedor.types"
 
 interface FormData extends CreateProveedorRequest {}
 

@@ -18,8 +18,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "@/hooks/use-toast"
 import { ingredienteService } from "@/services/ingrediente-service"
 import { proveedorService } from "@/services/proveedor-service"
-import type { Ingrediente, CreateIngredienteRequest, UnidadMedida, Proveedor } from "@/types"
-import { UnidadMedida as UnidadMedidaEnum } from "@/types"
+import type { Ingrediente, CreateIngredienteRequest, UnidadMedida} from "@/types/ingrediente.types"
+import type { Proveedor } from "@/types/proveedor.types"
+import { UnidadMedida as UnidadMedidaEnum } from "@/types/ingrediente.types"
 import { useForm, Controller } from "react-hook-form"
 
 interface IngredienteFormModalProps {

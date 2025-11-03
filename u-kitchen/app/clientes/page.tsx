@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { clienteService } from "@/services/cliente-service"
-import type { Cliente } from "@/types"
+import type { Cliente } from "@/types/cliente.types"
 import { ClienteFormModal } from "@/components/forms/cliente-form-modal"
 
 export default function ClientesPage() {

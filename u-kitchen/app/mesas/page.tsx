@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { mesaService } from "@/services/mesa-service"
-import type { Mesa } from "@/types"
+import type { Mesa } from "@/types/mesa.types"
 import { MesaFormModal } from "@/components/forms/mesa-form-modal"
 
 export default function MesasPage() {

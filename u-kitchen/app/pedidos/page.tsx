@@ -12,36 +12,8 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { pedidoService } from "@/services/pedido-service"
-import { type Pedido, PedidoEstado } from "@/types"
-
-type EstadoLabel = Record<PedidoEstado, string>;
-
-const estadoLabels: EstadoLabel = {
-  [PedidoEstado.PENDIENTE]: "Pendiente",
-  [PedidoEstado.EN_PREPARACION]: "En Preparación",
-  [PedidoEstado.LISTO]: "Listo",
-  [PedidoEstado.ENTREGADO]: "Entregado",
-  [PedidoEstado.CANCELADO]: "Cancelado",
-  [PedidoEstado.RECHAZADO]: "Rechazado",
-};
-
-const estadoColors = {
-  [PedidoEstado.PENDIENTE]: "bg-yellow-100 text-yellow-800",
-  [PedidoEstado.EN_PREPARACION]: "bg-blue-100 text-blue-800",
-  [PedidoEstado.LISTO]: "bg-green-100 text-green-800",
-  [PedidoEstado.ENTREGADO]: "bg-gray-100 text-gray-800",
-  [PedidoEstado.CANCELADO]: "bg-red-100 text-red-800",
-  [PedidoEstado.RECHAZADO]: "bg-red-100 text-red-800",
-}
-
-const estadoIcons = {
-  [PedidoEstado.PENDIENTE]: Clock,
-  [PedidoEstado.EN_PREPARACION]: AlertCircle,
-  [PedidoEstado.LISTO]: CheckCircle,
-  [PedidoEstado.ENTREGADO]: CheckCircle,
-  [PedidoEstado.CANCELADO]: XCircle,
-  [PedidoEstado.RECHAZADO]: XCircle,
-}
+import { type Pedido, PedidoEstado } from "@/types/pedido.types"
+import { estadoColors, estadoIcons, estadoLabels } from "@/lib/catalogs"
 
 export default function PedidosPage() {
   const router = useRouter()

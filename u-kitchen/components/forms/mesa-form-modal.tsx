@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "@/hooks/use-toast"
 import { mesaService } from "@/services/mesa-service"
-import type { Mesa, CreateMesaRequest } from "@/types"
+import type { Mesa, CreateMesaRequest } from "@/types/mesa.types"
 import { useForm } from "react-hook-form"
 
 interface MesaFormModalProps {

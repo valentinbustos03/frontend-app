@@ -20,7 +20,6 @@ export function Header() {
   const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.removeItem("loggedInUser");
     logout(); 
     router.push("/"); 
     router.refresh();

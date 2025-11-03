@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, Edit, Trash2, Users, Clock, DollarSign } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { EmpleadoFormModal } from "@/components/forms/empleado-form-modal"
-import { Empleado, EmployeeRole, EmployeeShift } from "@/types"
+import { Empleado, EmployeeRole, EmployeeShift } from "@/types/empleado.types"
 import { empleadoService } from "@/services/empleado-service"
 
 const roleColors = {

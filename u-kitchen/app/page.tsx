@@ -1,23 +1,24 @@
 "use client";
-
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, User, Briefcase } from "lucide-react";
 import { userService } from "@/services/usuario-service";
-import type { Usuario } from "@/types";
+import type { Usuario } from "@/types/usuario.types";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, user } = useAuth(); // Usa el hook
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loggedInUser = localStorage.getItem("loggedInUser");
-    if (loggedInUser) {
+    // Si ya hay user, redirige
+    if (user) {
       router.replace("/dashboard");
     }
-  }, [router]);
+  }, [user, router]);
 
   const handleLoginAsRole = async (role: "admin" | "cliente" | "empleado") => {
     setLoading(true);
@@ -36,31 +37,22 @@ export default function LoginPage() {
         default:
           throw new Error("Rol inválido");
       }
-
-      const user: Usuario = await userService.getUsuarioById(userId);
+      const fetchedUser: Usuario = await userService.getUsuarioById(userId);
       
-      // Guardar en localStorage
-      localStorage.setItem("loggedInUser", JSON.stringify({
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        role: user.role,
-        profilePicture: user.profilePicture,
-        ...(user.client && { client: user.client }),
-        ...(user.employee && { employee: user.employee }),
-      }));
-
-      router.refresh();
-
-      switch (user.role) {
+      // Usa el login del hook (actualiza state y localStorage)
+      login(fetchedUser);
+      
+      // No necesitas router.refresh() ya que el hook actualiza reactivamente
+      // Redirige basado en rol (igual que antes)
+      switch (fetchedUser.role) {
         case "admin":
-          router.replace("/dashboard"); 
+          router.replace("/dashboard");
           break;
         case "user":
-          if (user.client) {
-            router.replace("/menu"); 
-          } else if (user.employee) {
-            router.replace("/pedidos"); 
+          if (fetchedUser.client) {
+            router.replace("/menu");
+          } else if (fetchedUser.employee) {
+            router.replace("/pedidos");
           }
           break;
         default:

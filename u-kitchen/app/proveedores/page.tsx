@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { proveedorService } from "@/services/proveedor-service"
-import type { Proveedor } from "@/types"
+import type { Proveedor } from "@/types/proveedor.types"
 import { ProveedorFormModal } from "@/components/forms/proveedor-form-modal"
 
 export default function ProveedoresPage() {

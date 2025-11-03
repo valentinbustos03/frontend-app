@@ -1,4 +1,5 @@
-import type { Cliente, CreateClienteRequest, ClienteFilters, PaginatedResponse } from "@/types"
+import type { Cliente, CreateClienteRequest, ClienteFilters} from "@/types/cliente.types"
+import { PaginatedResponse } from "@/types/common.types"
 import { api } from "@/lib/api"
 
 interface ApiResponse<T> {

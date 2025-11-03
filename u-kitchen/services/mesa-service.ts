@@ -1,4 +1,5 @@
-import type { Mesa, CreateMesaRequest, MesaFilters, PaginatedResponse } from "@/types"
+import type { Mesa, CreateMesaRequest, MesaFilters } from "@/types/mesa.types"
+import { PaginatedResponse } from "@/types/common.types";
 import { api } from "@/lib/api"
 
 interface UpdateMesaResponse {

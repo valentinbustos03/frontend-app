@@ -1,5 +1,4 @@
 "use client"
-
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -16,7 +15,6 @@ import {
   ShoppingBasket,
   BookOpen
 } from "lucide-react"
-
 import {
   Sidebar,
   SidebarContent,
@@ -149,17 +147,17 @@ const menuItems: MenuGroup[] = [
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { user, isAdmin, isCliente, isEmpleado } = useAuth()
+  const { user, currentRole } = useAuth()
 
-  // const currentRole = user?.role === 'admin' ? 'admin' : 
-  //                    (isCliente ? 'cliente' : 
-  //                    (isEmpleado ? 'empleado' : 'guest'))
-  const currentRole = 'admin';
+  // ¡Nuevo: Si no hay user o es guest, no renderices nada (fallback para MainLayout)
+  if (!user || currentRole === 'guest') {
+    return null
+  }
 
   // Filtrar ítems permitidos por rol
   const filteredMenuItems = menuItems.map(group => ({
     ...group,
-    items: group.items.filter(item => item.allowedFor.includes(currentRole as any))
+    items: group.items.filter(item => item.allowedFor.includes(currentRole as 'admin' | 'cliente' | 'empleado')) // ¡Mejorado: Tipado explícito
   })).filter(group => group.items.length > 0) // Ocultar grupos vacíos
 
   return (
@@ -180,7 +178,6 @@ export function AppSidebar() {
                   const Icon = item.icon
                   const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
                   const isDisabled = item.disabled
-
                   return (
                     <SidebarMenuItem key={item.href}>
                       {isDisabled ? (

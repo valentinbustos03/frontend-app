@@ -17,16 +17,17 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Plato } from "@/types" // Asumiendo que la interfaz está en types
+import { Plato } from "@/types/plato.types"
 import { platoService } from "@/services/plato-service"
 import { mesaService } from "@/services/mesa-service"
 import { empleadoService } from "@/services/empleado-service"
 import { pedidoService } from "@/services/pedido-service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
-import type { Mesa, Empleado } from "@/types"
-import { EmployeeRole } from "@/types"
-import { PedidoEstado } from "@/types"
+import type { Mesa } from "@/types/mesa.types"
+import type { Empleado } from "@/types/empleado.types"
+import { EmployeeRole } from "@/types/empleado.types"
+import { PedidoEstado } from "@/types/pedido.types"
 
 export default function MenuPage() {
   const [platos, setPlatos] = useState<Plato[]>([])

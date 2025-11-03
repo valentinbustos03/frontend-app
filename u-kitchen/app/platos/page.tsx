@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
 import { platoService } from "@/services/plato-service"
-import type { Plato } from "@/types"
+import type { Plato } from "@/types/plato.types"
 import { PlatoFormModal } from "@/components/forms/plato-form-modal"
 
 export default function PlatosPage() {

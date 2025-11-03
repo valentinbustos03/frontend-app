@@ -1,4 +1,5 @@
-import type { Ingrediente, CreateIngredienteRequest, IngredienteFilters, PaginatedResponse } from "@/types"
+import type { Ingrediente, CreateIngredienteRequest, IngredienteFilters} from "@/types/ingrediente.types"
+import { PaginatedResponse } from "@/types/common.types";
 import { api } from "@/lib/api"
 
 interface UpdateIngredienteResponse {

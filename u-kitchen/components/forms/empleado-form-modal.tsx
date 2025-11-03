@@ -19,14 +19,12 @@ import { empleadoService } from "@/services/empleado-service"
 import { userService } from "@/services/usuario-service"
 import type { 
   Empleado, 
-  CreateEmpleadoRequest, 
-  Usuario, 
-  UserRole, 
-  CreateUsuarioRequest,
-  EmployeeRole,
-  EmployeeShift 
-} from "@/types"
-import { EmployeeRole as EmployeeRoleEnum, EmployeeShift as EmployeeShiftEnum, UserRole as UserRoleEnum } from "@/types"
+  CreateEmpleadoRequest
+} from "@/types/empleado.types"
+import type { CreateUsuarioRequest } from "@/types/usuario.types"
+import { EmployeeRole as EmployeeRoleEnum, EmployeeShift as EmployeeShiftEnum } from "@/types/empleado.types"
+import  { UserRole as UserRoleEnum } from "@/types/usuario.types"
+
 
 interface FormData extends CreateEmpleadoRequest {
   email: string

@@ -1,4 +1,5 @@
-import type { Plato, CreatePlatoRequest, PlatoFilters, PaginatedResponse } from "@/types"
+import type { Plato, CreatePlatoRequest, PlatoFilters } from "@/types/plato.types"
+import { PaginatedResponse } from "@/types/common.types";
 import { api } from "@/lib/api"
 
 class PlatoService {

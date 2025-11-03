@@ -1,4 +1,5 @@
-import type { Pedido, CreatePedidoRequest, PedidoFilters, PaginatedResponse, PedidoEstado } from "@/types"
+import type { Pedido, CreatePedidoRequest, PedidoFilters, PedidoEstado } from "@/types/pedido.types"
+import { PaginatedResponse } from "@/types/common.types";
 import { api } from "@/lib/api"
 
 interface ApiResponse<T> {
