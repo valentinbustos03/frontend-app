@@ -65,13 +65,24 @@ class PedidoService {
     }
   }
 
-  async updatePedidoEstado(id: string, estado: PedidoEstado): Promise<Pedido> {
-    try {
-      return await api.put<Pedido>(`/order/${id}`, { status: estado });
-    } catch (error) {
-      console.error("Error updating pedido estado:", error)
-      throw error
+  async updatePedidoEstado(pedido: Pedido, estado: PedidoEstado): Promise<Pedido> {
+    // El backend valida el body con OrderSchema completo (no parcial),
+    // por lo que un PUT con sólo { status } falla con 400. Reconstruimos el payload.
+    const payload: CreatePedidoRequest = {
+      description: pedido.description,
+      status: estado,
+      estimatedEndTime: new Date(pedido.estimatedEndTime).toISOString(),
+      endTime: pedido.endTime ? new Date(pedido.endTime).toISOString() : new Date().toISOString(),
+      orderItems: pedido.orderItems.map((item) => ({
+        dish: { id: item.dish.id },
+        quantity: item.quantity,
+      })),
+      client: { id: pedido.client.id },
+      table: { id: pedido.table.id },
+      waiter: { id: pedido.waiter.id },
     }
+    const response = await api.put<ApiResponse<Pedido>>(`/order/${pedido.orderId}`, payload)
+    return response.data
   }
 }
 

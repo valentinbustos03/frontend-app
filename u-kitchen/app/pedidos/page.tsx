@@ -2,11 +2,21 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Filter, MoreHorizontal, Eye, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { Plus, Filter, MoreHorizontal, Eye, Clock, CheckCircle, XCircle, AlertCircle, Ban } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -24,6 +34,7 @@ export default function PedidosPage() {
   const [estadoFilter, setEstadoFilter] = useState<string>("all")
   const [fechaDesde, setFechaDesde] = useState("")
   const [fechaHasta, setFechaHasta] = useState("")
+  const [pendingTerminal, setPendingTerminal] = useState<{ pedido: Pedido; estado: PedidoEstado } | null>(null)
 
   useEffect(() => {
     loadPedidos()
@@ -57,22 +68,32 @@ export default function PedidosPage() {
     })
   }, [pedidos, estadoFilter, fechaDesde, fechaHasta])
 
-  const handleUpdateEstado = async (pedido: Pedido, nuevoEstado: PedidoEstado) => { 
+  const applyEstado = async (pedido: Pedido, nuevoEstado: PedidoEstado) => {
     try {
-      const newPedido = {pedido, ...{status: nuevoEstado}}
-      const updatedPedido = await pedidoService.updatePedido(pedido.orderId, newPedido)
-      setPedidos(pedidos.map((p) => (p.orderId === pedido.orderId ? updatedPedido : p)))
+      const updatedPedido = await pedidoService.updatePedidoEstado(pedido, nuevoEstado)
+      setPedidos((prev) => prev.map((p) => (p.orderId === pedido.orderId ? updatedPedido : p)))
       toast({
         title: "Estado actualizado",
-        description: `El pedido ${pedido.orderId} ahora está ${estadoLabels[nuevoEstado].toLowerCase()}`,
+        description: `El pedido #${pedido.orderId} ahora está ${estadoLabels[nuevoEstado].toLowerCase()}`,
       })
     } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo actualizar el status del pedido",
+        description: "No se pudo actualizar el estado del pedido",
         variant: "destructive",
       })
     }
+  }
+
+  const requestTerminal = (pedido: Pedido, estado: PedidoEstado) => {
+    setPendingTerminal({ pedido, estado })
+  }
+
+  const confirmTerminal = async () => {
+    if (!pendingTerminal) return
+    const { pedido, estado } = pendingTerminal
+    setPendingTerminal(null)
+    await applyEstado(pedido, estado)
   }
 
   const formatCurrency = (amount: number) => {
@@ -118,7 +139,10 @@ export default function PedidosPage() {
           <h1 className="text-3xl font-bold text-orange-600">Gestión de Pedidos</h1>
           <p className="text-gray-600">Administra todos los pedidos del restaurante</p>
         </div>
-        <Button disabled={true} className="text-white bg-orange-600 hover:bg-orange-700">
+        <Button
+          onClick={() => router.push("/menu")}
+          className="text-white bg-orange-600 hover:bg-orange-700"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Pedido
         </Button>
@@ -272,38 +296,48 @@ export default function PedidosPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem disabled={true} onClick={() => router.push(`/pedidos/${pedido.orderId}`)}>
+                        <DropdownMenuItem onClick={() => router.push(`/pedidos/${pedido.orderId}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalles
                         </DropdownMenuItem>
                         {pedido.status === PedidoEstado.PENDIENTE && (
-                          <DropdownMenuItem disabled={true} onClick={() => handleUpdateEstado(pedido, PedidoEstado.EN_PREPARACION)}>
+                          <DropdownMenuItem onClick={() => applyEstado(pedido, PedidoEstado.EN_PREPARACION)}>
                             <AlertCircle className="mr-2 h-4 w-4" />
                             Iniciar Preparación
                           </DropdownMenuItem>
                         )}
                         {pedido.status === PedidoEstado.EN_PREPARACION && (
-                          <DropdownMenuItem disabled={true} onClick={() => handleUpdateEstado(pedido, PedidoEstado.LISTO)}>
+                          <DropdownMenuItem onClick={() => applyEstado(pedido, PedidoEstado.LISTO)}>
                             <CheckCircle className="mr-2 h-4 w-4" />
                             Marcar como Listo
                           </DropdownMenuItem>
                         )}
                         {pedido.status === PedidoEstado.LISTO && (
-                          <DropdownMenuItem disabled={true} onClick={() => handleUpdateEstado(pedido, PedidoEstado.ENTREGADO)}>
+                          <DropdownMenuItem onClick={() => applyEstado(pedido, PedidoEstado.ENTREGADO)}>
                             <CheckCircle className="mr-2 h-4 w-4" />
                             Marcar como Entregado
                           </DropdownMenuItem>
                         )}
-                        {pedido.status !== PedidoEstado.CANCELADO && pedido.status !== PedidoEstado.ENTREGADO && (
+                        {pedido.status === PedidoEstado.PENDIENTE && (
                           <DropdownMenuItem
-                            disabled={true}
-                            onClick={() => handleUpdateEstado(pedido, PedidoEstado.CANCELADO)}
+                            onClick={() => requestTerminal(pedido, PedidoEstado.RECHAZADO)}
                             className="text-red-600"
                           >
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Cancelar Pedido
+                            <Ban className="mr-2 h-4 w-4" />
+                            Rechazar Pedido
                           </DropdownMenuItem>
                         )}
+                        {pedido.status !== PedidoEstado.CANCELADO &&
+                          pedido.status !== PedidoEstado.RECHAZADO &&
+                          pedido.status !== PedidoEstado.ENTREGADO && (
+                            <DropdownMenuItem
+                              onClick={() => requestTerminal(pedido, PedidoEstado.CANCELADO)}
+                              className="text-red-600"
+                            >
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Cancelar Pedido
+                            </DropdownMenuItem>
+                          )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -319,6 +353,30 @@ export default function PedidosPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!pendingTerminal} onOpenChange={(open) => !open && setPendingTerminal(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingTerminal?.estado === PedidoEstado.RECHAZADO ? "Rechazar pedido" : "Cancelar pedido"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingTerminal
+                ? `El pedido #${pendingTerminal.pedido.orderId} pasará a estado "${estadoLabels[pendingTerminal.estado].toLowerCase()}". Esta acción no se puede deshacer.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Volver</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmTerminal}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
