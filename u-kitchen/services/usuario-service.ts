@@ -1,10 +1,5 @@
 import type { Usuario, CreateUsuarioRequest } from "@/types/usuario.types"
-import { api } from "@/lib/api"
-
-interface ApiResponse<T> {
-  message: string
-  data: T
-}
+import { api, type ApiResponse } from "@/lib/api"
 
 class UserService {
   async createUsuario(usuario: CreateUsuarioRequest): Promise<Usuario> {

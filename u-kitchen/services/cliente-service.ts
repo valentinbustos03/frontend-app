@@ -1,11 +1,6 @@
 import type { Cliente, CreateClienteRequest, ClienteFilters} from "@/types/cliente.types"
 import { PaginatedResponse } from "@/types/common.types"
-import { api } from "@/lib/api"
-
-interface ApiResponse<T> {
-  message: string
-  data: T
-}
+import { api, type ApiResponse } from "@/lib/api"
 
 class ClienteService {
   async getClientes(filters?: ClienteFilters): Promise<PaginatedResponse<Cliente>> {

@@ -1,56 +1,133 @@
-// Configuración de la API del backend
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
 
-// Headers por defecto para las peticiones
-export const defaultHeaders = {
-  'Content-Type': 'application/json',
-};
+const DEFAULT_TIMEOUT_MS = 15_000
 
-// Función helper para hacer peticiones HTTP
-export async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const config: RequestInit = {
-    headers: defaultHeaders,
-    ...options,
-  };
+const defaultHeaders = {
+  "Content-Type": "application/json",
+}
 
-  try {
-    const response = await fetch(url, config);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`API request failed for ${endpoint}:`, error);
-    throw error;
+export class ApiError extends Error {
+  readonly status: number
+  readonly endpoint: string
+  readonly details?: unknown
+
+  constructor(message: string, status: number, endpoint: string, details?: unknown) {
+    super(message)
+    this.name = "ApiError"
+    this.status = status
+    this.endpoint = endpoint
+    this.details = details
+  }
+
+  get isClientError() {
+    return this.status >= 400 && this.status < 500
+  }
+
+  get isServerError() {
+    return this.status >= 500
+  }
+
+  get isNetworkError() {
+    return this.status === 0
   }
 }
 
-// Métodos HTTP helpers
-export const api = {
-  get: <T>(endpoint: string) => 
-    apiRequest<T>(endpoint, { method: 'GET' }),
-    
-  post: <T>(endpoint: string, data?: any) =>
-    apiRequest<T>(endpoint, {
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    }),
-    
-  put: <T>(endpoint: string, data?: any) =>
-    apiRequest<T>(endpoint, {
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    }),
-    
-  delete: <T>(endpoint: string) =>
-    apiRequest<T>(endpoint, { method: 'DELETE' }),
-};
+export interface ApiResponse<T> {
+  message: string
+  data: T
+}
 
-export default api;
+export interface ApiRequestOptions extends Omit<RequestInit, "body"> {
+  body?: unknown
+  signal?: AbortSignal
+  timeoutMs?: number
+}
+
+async function parseErrorBody(response: Response): Promise<{ message: string; details?: unknown }> {
+  const contentType = response.headers.get("content-type") ?? ""
+  if (contentType.includes("application/json")) {
+    try {
+      const body = (await response.json()) as { message?: string; error?: unknown }
+      return {
+        message: body.message ?? `HTTP ${response.status}`,
+        details: body.error,
+      }
+    } catch {
+      return { message: `HTTP ${response.status}` }
+    }
+  }
+  try {
+    const text = await response.text()
+    return { message: text || `HTTP ${response.status}` }
+  } catch {
+    return { message: `HTTP ${response.status}` }
+  }
+}
+
+export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
+  const { body, signal, timeoutMs = DEFAULT_TIMEOUT_MS, headers, ...rest } = options
+
+  const controller = new AbortController()
+  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs)
+
+  // Combinar abort externo con el del timeout.
+  const onExternalAbort = () => controller.abort()
+  signal?.addEventListener("abort", onExternalAbort)
+
+  const url = `${API_BASE_URL}${endpoint}`
+
+  try {
+    const response = await fetch(url, {
+      ...rest,
+      headers: { ...defaultHeaders, ...headers },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const { message, details } = await parseErrorBody(response)
+      throw new ApiError(message, response.status, endpoint, details)
+    }
+
+    if (response.status === 204) {
+      return undefined as T
+    }
+
+    return (await response.json()) as T
+  } catch (error) {
+    if (error instanceof ApiError) throw error
+
+    if (error instanceof DOMException && error.name === "AbortError") {
+      if (signal?.aborted) {
+        throw new ApiError("Request cancelled", 0, endpoint, error)
+      }
+      throw new ApiError(`Request timed out after ${timeoutMs}ms`, 0, endpoint, error)
+    }
+
+    throw new ApiError(
+      error instanceof Error ? error.message : "Unknown network error",
+      0,
+      endpoint,
+      error,
+    )
+  } finally {
+    clearTimeout(timeoutHandle)
+    signal?.removeEventListener("abort", onExternalAbort)
+  }
+}
+
+export const api = {
+  get: <T>(endpoint: string, options?: ApiRequestOptions) =>
+    apiRequest<T>(endpoint, { ...options, method: "GET" }),
+
+  post: <T>(endpoint: string, data?: unknown, options?: ApiRequestOptions) =>
+    apiRequest<T>(endpoint, { ...options, method: "POST", body: data }),
+
+  put: <T>(endpoint: string, data?: unknown, options?: ApiRequestOptions) =>
+    apiRequest<T>(endpoint, { ...options, method: "PUT", body: data }),
+
+  delete: <T>(endpoint: string, options?: ApiRequestOptions) =>
+    apiRequest<T>(endpoint, { ...options, method: "DELETE" }),
+}
+
+export default api

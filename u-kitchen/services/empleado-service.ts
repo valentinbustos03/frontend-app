@@ -1,11 +1,6 @@
 import type { Empleado, CreateEmpleadoRequest, EmpleadoFilters} from "@/types/empleado.types"
 import { PaginatedResponse } from "@/types/common.types"
-import { api } from "@/lib/api"
-
-interface ApiResponse<T> {
-  message: string
-  data: T
-}
+import { api, type ApiResponse } from "@/lib/api"
 
 class EmpleadoService {
   async getEmpleados(filters?: EmpleadoFilters): Promise<PaginatedResponse<Empleado>> {
