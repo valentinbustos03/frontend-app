@@ -24,6 +24,7 @@ import { empleadoService } from "@/services/empleado-service"
 import { pedidoService } from "@/services/pedido-service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
+import { useCartStore } from "@/lib/stores/cart-store"
 import type { Mesa } from "@/types/mesa.types"
 import type { Empleado } from "@/types/empleado.types"
 import { EmployeeRole } from "@/types/empleado.types"
@@ -35,7 +36,11 @@ export default function MenuPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [tagFilter, setTagFilter] = useState("all")
   const [sortBy, setSortBy] = useState<"none" | "price-asc" | "price-desc" | "calification-desc">("none")
-  const [cart, setCart] = useState<{ [key: string]: number }>({})
+
+  const cart = useCartStore((s) => s.items)
+  const addCart = useCartStore((s) => s.add)
+  const removeCart = useCartStore((s) => s.remove)
+  const clearCart = useCartStore((s) => s.clear)
 
   // Para el modal de confirmación
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -117,17 +122,7 @@ export default function MenuPage() {
   }, [filteredAndSorted])
 
   const addToCart = (id: string, delta: number) => {
-    setCart(prev => {
-      const currentQty = prev[id] || 0
-      const newQty = currentQty + delta
-      const newCart = { ...prev }
-      if (newQty <= 0) {
-        delete newCart[id]
-      } else {
-        newCart[id] = newQty
-      }
-      return newCart
-    })
+    addCart(id, delta)
   }
 
   const total = useMemo(() => {
@@ -185,7 +180,7 @@ export default function MenuPage() {
       })
 
       // Limpiar carrito y cerrar modal
-      setCart({})
+      clearCart()
       setShowConfirmModal(false)
       setDescription("")
       setSelectedMesaId("")
@@ -372,7 +367,8 @@ export default function MenuPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => addToCart(id, -qty)}
+                      aria-label={`Quitar ${plato.name} del carrito`}
+                      onClick={() => removeCart(id)}
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
