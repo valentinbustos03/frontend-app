@@ -31,6 +31,15 @@ class ClienteService {
     }
   }
 
+  async findByDni(dni: number | string): Promise<Cliente> {
+    try {
+      return await api.get<Cliente>(`/client/dni/${dni}`);
+    } catch (error) {
+      console.error("Error fetching cliente by DNI:", error)
+      throw error
+    }
+  }
+
   async createCliente(cliente: CreateClienteRequest): Promise<Cliente> {
     try {
       const response = await api.post<ApiResponse<Cliente>>('/client/add', cliente);

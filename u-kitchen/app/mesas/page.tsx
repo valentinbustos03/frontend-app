@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { mesaService } from "@/services/mesa-service"
 import type { Mesa } from "@/types/mesa.types"
 import { MesaFormModal } from "@/components/forms/mesa-form-modal"
+import { QuickFindByCode } from "@/components/shared/quick-find-by-code"
 
 export default function MesasPage() {
   const router = useRouter()
@@ -194,6 +195,15 @@ export default function MesasPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="mt-4">
+            <QuickFindByCode
+              label="Buscar por código de mesa"
+              placeholder="Ir a código de mesa..."
+              fetcher={(cod) => mesaService.findByCod(cod)}
+              onFound={(mesa) => router.push(`/mesas/${mesa.id}`)}
+              notFoundMessage="No existe una mesa con ese código"
+            />
+          </div>
         </CardContent>
       </Card>
       {/* Stats */}
@@ -278,7 +288,7 @@ export default function MesasPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem  disabled={true} onClick={() => router.push(`/mesas/${mesa.id}`)}>
+                        <DropdownMenuItem onClick={() => router.push(`/mesas/${mesa.id}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalles
                         </DropdownMenuItem>

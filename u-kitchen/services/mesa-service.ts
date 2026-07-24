@@ -36,6 +36,15 @@ class MesaService {
     }
   }
 
+  async findByCod(cod: string): Promise<Mesa> {
+    try {
+      return await api.get<Mesa>(`/table/cod/${cod}`);
+    } catch (error) {
+      console.error("Error fetching mesa by cod:", error)
+      throw error
+    }
+  }
+
   async createMesa(mesa: CreateMesaRequest): Promise<Mesa> {
     try {
       const payload = { ...mesa };

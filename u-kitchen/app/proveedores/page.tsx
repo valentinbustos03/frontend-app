@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast"
 import { proveedorService } from "@/services/proveedor-service"
 import type { Proveedor } from "@/types/proveedor.types"
 import { ProveedorFormModal } from "@/components/forms/proveedor-form-modal"
+import { QuickFindByCode } from "@/components/shared/quick-find-by-code"
 
 export default function ProveedoresPage() {
   const router = useRouter()
@@ -140,13 +141,22 @@ export default function ProveedoresPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Buscar proveedores..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                placeholder="Buscar proveedores..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <QuickFindByCode
+              label="Buscar por CUIT exacto"
+              placeholder="Ir a CUIT..."
+              fetcher={(taxId) => proveedorService.findByTaxId(taxId)}
+              onFound={(prov) => router.push(`/proveedores/${prov.id}`)}
+              notFoundMessage="No existe un proveedor con ese CUIT"
             />
           </div>
         </CardContent>
@@ -235,7 +245,7 @@ export default function ProveedoresPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem disabled={true} onClick={() => router.push(`/proveedores/${proveedor.id}`)}>
+                        <DropdownMenuItem onClick={() => router.push(`/proveedores/${proveedor.id}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalles
                         </DropdownMenuItem>

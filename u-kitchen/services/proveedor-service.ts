@@ -31,6 +31,15 @@ class ProveedorService {
     }
   }
 
+  async findByTaxId(taxId: string): Promise<Proveedor> {
+    try {
+      return await api.get<Proveedor>(`/supplier/taxId/${taxId}`);
+    } catch (error) {
+      console.error("Error fetching proveedor by taxId:", error)
+      throw error
+    }
+  }
+
   async createProveedor(proveedor: CreateProveedorRequest): Promise<Proveedor> {
     try {
       return await api.post<Proveedor>('/supplier/add', proveedor);

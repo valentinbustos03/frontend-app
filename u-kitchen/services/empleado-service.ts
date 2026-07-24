@@ -31,6 +31,15 @@ class EmpleadoService {
     }
   }
 
+  async findByTaxId(taxId: string): Promise<Empleado> {
+    try {
+      return await api.get<Empleado>(`/employee/taxId/${taxId}`);
+    } catch (error) {
+      console.error("Error fetching empleado by taxId:", error)
+      throw error
+    }
+  }
+
   async createEmpleado(empleado: CreateEmpleadoRequest): Promise<Empleado> {
     try {
       const response = await api.post<ApiResponse<Empleado>>('/employee/add', empleado);

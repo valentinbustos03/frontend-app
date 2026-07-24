@@ -34,6 +34,7 @@ import { ClienteFormModal } from "@/components/forms/cliente-form-modal"
 import { TableToolbar } from "@/components/shared/table-toolbar"
 import { StatsGrid, type StatItem } from "@/components/shared/stats-grid"
 import { EmptyState } from "@/components/shared/empty-state"
+import { QuickFindByCode } from "@/components/shared/quick-find-by-code"
 
 const AVATAR_COLORS = [
   "bg-red-500",
@@ -220,18 +221,27 @@ export default function ClientesPage() {
         resultCount={filteredClientes.length}
         totalCount={clientes.length}
         filters={
-          <Select value={penalizacionFilter} onValueChange={setPenalizacionFilter}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Penalización" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las penalizaciones</SelectItem>
-              <SelectItem value="ninguna">Sin penalización</SelectItem>
-              <SelectItem value="baja">Penalización baja</SelectItem>
-              <SelectItem value="media">Penalización media</SelectItem>
-              <SelectItem value="alta">Penalización alta</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <QuickFindByCode
+              label="Buscar por DNI exacto"
+              placeholder="Ir a DNI..."
+              fetcher={(dni) => clienteService.findByDni(dni)}
+              onFound={(cliente) => router.push(`/clientes/${cliente.id}`)}
+              notFoundMessage="No existe un cliente con ese DNI"
+            />
+            <Select value={penalizacionFilter} onValueChange={setPenalizacionFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Penalización" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las penalizaciones</SelectItem>
+                <SelectItem value="ninguna">Sin penalización</SelectItem>
+                <SelectItem value="baja">Penalización baja</SelectItem>
+                <SelectItem value="media">Penalización media</SelectItem>
+                <SelectItem value="alta">Penalización alta</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         }
       />
 
@@ -299,10 +309,7 @@ export default function ClientesPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          disabled
-                          onClick={() => router.push(`/clientes/${cliente.id}`)}
-                        >
+                        <DropdownMenuItem onClick={() => router.push(`/clientes/${cliente.id}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalles
                         </DropdownMenuItem>
