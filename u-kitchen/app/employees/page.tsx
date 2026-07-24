@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search, Edit, Trash2, Users, Clock, DollarSign } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Users, Clock, DollarSign, Eye } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { EmpleadoFormModal } from "@/components/forms/empleado-form-modal"
 import { Empleado, EmployeeRole, EmployeeShift } from "@/types/empleado.types"
@@ -41,6 +42,7 @@ const getAvatarColor = (name: string) => {
 }
 
 export default function EmpleadosPage() {
+  const router = useRouter()
   const [empleados, setEmpleados] = useState<Empleado[]>([])
   const [filteredEmpleados, setFilteredEmpleados] = useState<Empleado[]>([])
   const [loading, setLoading] = useState(true)
@@ -264,6 +266,14 @@ export default function EmpleadosPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => router.push(`/employees/${empleado.id}`)}
+                    aria-label="Ver detalles"
+                  >
+                    <Eye className="h-4 w-4 text-blue-500" />
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => handleEditEmpleado(empleado)}>
                     <Edit className="h-4 w-4 text-yellow-500" />
                   </Button>
