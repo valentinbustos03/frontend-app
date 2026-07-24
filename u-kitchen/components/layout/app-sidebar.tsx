@@ -58,6 +58,12 @@ const menuItems: MenuGroup[] = [
         href: "/menu",
         allowedFor: ["admin", "cliente", "empleado"],
       },
+      {
+        label: "Mis Pedidos",
+        icon: ShoppingCart,
+        href: "/mis-pedidos",
+        allowedFor: ["cliente"],
+      },
     ],
   },
   {

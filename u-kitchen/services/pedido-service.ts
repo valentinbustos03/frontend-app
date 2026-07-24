@@ -60,6 +60,16 @@ class PedidoService {
     }
   }
 
+  async findAllByClientId(clientId: string): Promise<Pedido[]> {
+    try {
+      const response = await api.get<ApiResponse<Pedido[]> | Pedido[]>(`/order/findAllClientOrders/${clientId}`)
+      return Array.isArray(response) ? response : response.data
+    } catch (error) {
+      console.error("Error fetching client orders:", error)
+      throw error
+    }
+  }
+
   async updatePedidoEstado(pedido: Pedido, estado: PedidoEstado): Promise<Pedido> {
     // El backend valida el body con OrderSchema completo (no parcial),
     // por lo que un PUT con sólo { status } falla con 400. Reconstruimos el payload.
