@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast"
 import { ingredienteService } from "@/services/ingrediente-service"
 import { type Ingrediente, UnidadMedida } from "@/types/ingrediente.types"
 import { IngredienteFormModal } from "@/components/forms/ingrediente-form-modal"
+import { PaginationControls } from "@/components/shared/pagination-controls"
+import { usePagination } from "@/hooks/use-pagination"
 
 const unidadMedidaLabels: { [key in UnidadMedida]: string } = {
   [UnidadMedida.KILOGRAMOS]: "kg",
@@ -73,6 +75,8 @@ export default function IngredientesPage() {
       return matchesSearch && matchesStockBajo && matchesUnidadMedida
     })
   }, [ingredientes, searchTerm, stockBajoFilter, unidadMedidaFilter])
+
+  const { page, setPage, totalPages, pageItems } = usePagination(filteredIngredientes)
 
   const handleDeleteIngrediente = async (ingrediente: Ingrediente) => {
     if (confirm(`¿Estás seguro de que deseas eliminar ${ingrediente.name}?`)) {
@@ -259,7 +263,7 @@ export default function IngredientesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredIngredientes.map((ingrediente) => (
+              {pageItems.map((ingrediente) => (
                 <TableRow key={ingrediente.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
@@ -347,6 +351,8 @@ export default function IngredientesPage() {
               <p className="text-gray-500">No se encontraron ingredientes</p>
             </div>
           )}
+
+          <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
       <IngredienteFormModal

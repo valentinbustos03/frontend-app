@@ -35,6 +35,8 @@ import { TableToolbar } from "@/components/shared/table-toolbar"
 import { StatsGrid, type StatItem } from "@/components/shared/stats-grid"
 import { EmptyState } from "@/components/shared/empty-state"
 import { QuickFindByCode } from "@/components/shared/quick-find-by-code"
+import { PaginationControls } from "@/components/shared/pagination-controls"
+import { usePagination } from "@/hooks/use-pagination"
 
 const AVATAR_COLORS = [
   "bg-red-500",
@@ -128,6 +130,8 @@ export default function ClientesPage() {
       }
     })
   }, [clientes, searchTerm, penalizacionFilter])
+
+  const { page, setPage, totalPages, pageItems } = usePagination(filteredClientes)
 
   const stats: StatItem[] = useMemo(
     () => [
@@ -260,7 +264,7 @@ export default function ClientesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredClientes.map((cliente) => (
+              {pageItems.map((cliente) => (
                 <TableRow key={cliente.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
@@ -343,6 +347,8 @@ export default function ClientesPage() {
               }
             />
           )}
+
+          <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
 

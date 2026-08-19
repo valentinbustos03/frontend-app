@@ -24,6 +24,8 @@ import { useToast } from "@/hooks/use-toast"
 import { pedidoService } from "@/services/pedido-service"
 import { type Pedido, PedidoEstado } from "@/types/pedido.types"
 import { estadoColors, estadoIcons, estadoLabels } from "@/lib/catalogs"
+import { PaginationControls } from "@/components/shared/pagination-controls"
+import { usePagination } from "@/hooks/use-pagination"
 
 export default function PedidosPage() {
   const router = useRouter()
@@ -67,6 +69,8 @@ export default function PedidosPage() {
       return matchesEstado && matchesFechaDesde && matchesFechaHasta
     })
   }, [pedidos, estadoFilter, fechaDesde, fechaHasta])
+
+  const { page, setPage, totalPages, pageItems } = usePagination(filteredPedidos)
 
   const applyEstado = async (pedido: Pedido, nuevoEstado: PedidoEstado) => {
     try {
@@ -246,7 +250,7 @@ export default function PedidosPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPedidos.map((pedido) => (
+              {pageItems.map((pedido) => (
                 <TableRow key={pedido.orderId}>
                   <TableCell>
                     <div className="font-medium text-orange-600">#{pedido.orderId}</div>
@@ -351,6 +355,8 @@ export default function PedidosPage() {
               <p className="text-gray-500">No se encontraron pedidos</p>
             </div>
           )}
+
+          <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
 

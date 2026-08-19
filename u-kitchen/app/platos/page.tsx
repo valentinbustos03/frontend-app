@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast"
 import { platoService } from "@/services/plato-service"
 import type { Plato } from "@/types/plato.types"
 import { PlatoFormModal } from "@/components/forms/plato-form-modal"
+import { PaginationControls } from "@/components/shared/pagination-controls"
+import { usePagination } from "@/hooks/use-pagination"
 
 export default function PlatosPage() {
   const router = useRouter()
@@ -55,6 +57,8 @@ export default function PlatosPage() {
       return matchesSearch && matchesPrecioMin && matchesPrecioMax
     })
   }, [platos, searchTerm, precioMin, precioMax])
+
+  const { page, setPage, totalPages, pageItems } = usePagination(filteredPlatos)
 
   const handleDeletePlato = async (plato: Plato) => {
     if (confirm(`¿Estás seguro de que deseas eliminar ${plato.name}?`)) {
@@ -213,7 +217,7 @@ export default function PlatosPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPlatos.map((plato) => (
+              {pageItems.map((plato) => (
                 <TableRow key={plato.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
@@ -294,6 +298,8 @@ export default function PlatosPage() {
               <p className="text-gray-500">No se encontraron platos</p>
             </div>
           )}
+
+          <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
       <PlatoFormModal

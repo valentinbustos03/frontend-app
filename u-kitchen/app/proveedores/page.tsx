@@ -14,6 +14,8 @@ import { proveedorService } from "@/services/proveedor-service"
 import type { Proveedor } from "@/types/proveedor.types"
 import { ProveedorFormModal } from "@/components/forms/proveedor-form-modal"
 import { QuickFindByCode } from "@/components/shared/quick-find-by-code"
+import { PaginationControls } from "@/components/shared/pagination-controls"
+import { usePagination } from "@/hooks/use-pagination"
 
 export default function ProveedoresPage() {
   const router = useRouter()
@@ -57,6 +59,8 @@ export default function ProveedoresPage() {
       return matchesSearch
     })
   }, [proveedores, searchTerm])
+
+  const { page, setPage, totalPages, pageItems } = usePagination(filteredProveedores)
 
   const handleDeleteProveedor = async (proveedor: Proveedor) => {
     if (confirm(`¿Estás seguro de que deseas eliminar a ${proveedor.companyName}?`)) {
@@ -205,7 +209,7 @@ export default function ProveedoresPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProveedores.map((proveedor) => (
+              {pageItems.map((proveedor) => (
                 <TableRow key={proveedor.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
@@ -275,6 +279,8 @@ export default function ProveedoresPage() {
               <p className="text-gray-500">No se encontraron proveedores</p>
             </div>
           )}
+
+          <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
       <ProveedorFormModal

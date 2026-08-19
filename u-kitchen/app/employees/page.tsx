@@ -11,6 +11,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { EmpleadoFormModal } from "@/components/forms/empleado-form-modal"
 import { Empleado, EmployeeRole, EmployeeShift } from "@/types/empleado.types"
 import { empleadoService } from "@/services/empleado-service"
+import { PaginationControls } from "@/components/shared/pagination-controls"
+import { usePagination } from "@/hooks/use-pagination"
 
 const roleColors = {
   chef: "bg-red-500",
@@ -51,6 +53,7 @@ export default function EmpleadosPage() {
   const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | undefined>()
   const [tipoFilter, setTipoFilter] = useState<EmployeeRole | "all">("all")
   const [turnoFilter, setTurnoFilter] = useState<EmployeeShift | "all">("all")
+  const { page, setPage, totalPages, pageItems } = usePagination(filteredEmpleados)
 
   useEffect(() => {
     loadEmpleados()
@@ -243,7 +246,7 @@ export default function EmpleadosPage() {
 
       {/* Empleados Grid */}
       <div className="grid gap-4 md:grid-cols-2 grid-cols-3 lg:grid-cols-4">
-        {filteredEmpleados.map((empleado) => (
+        {pageItems.map((empleado) => (
           <Card key={empleado.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -342,6 +345,8 @@ export default function EmpleadosPage() {
           </CardContent>
         </Card>
       )}
+
+      <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
 
       <EmpleadoFormModal
         open={modalOpen}

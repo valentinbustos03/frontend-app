@@ -13,6 +13,8 @@ import { mesaService } from "@/services/mesa-service"
 import type { Mesa } from "@/types/mesa.types"
 import { MesaFormModal } from "@/components/forms/mesa-form-modal"
 import { QuickFindByCode } from "@/components/shared/quick-find-by-code"
+import { PaginationControls } from "@/components/shared/pagination-controls"
+import { usePagination } from "@/hooks/use-pagination"
 
 export default function MesasPage() {
   const router = useRouter()
@@ -56,6 +58,8 @@ export default function MesasPage() {
       return matchesCapacidad && matchesOcupada && matchesSector
     })
   }, [mesas, capacidadFilter, ocupadaFilter, sectorFilter])
+
+  const { page, setPage, totalPages, pageItems } = usePagination(filteredMesas)
 
   const handleDeleteMesa = async (mesa: Mesa) => {
     if (confirm(`¿Estás seguro de que deseas eliminar la mesa ${mesa.cod}?`)) {
@@ -248,7 +252,7 @@ export default function MesasPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredMesas.map((mesa) => (
+              {pageItems.map((mesa) => (
                 <TableRow key={mesa.id}>
                   <TableCell>
                     <div className="font-medium text-orange-600">{mesa.cod}</div>
@@ -330,6 +334,8 @@ export default function MesasPage() {
               <p className="text-gray-500">No se encontraron mesas</p>
             </div>
           )}
+
+          <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
       <MesaFormModal open={modalOpen} onOpenChange={setModalOpen} mesa={editingMesa} onSuccess={loadMesas} />
