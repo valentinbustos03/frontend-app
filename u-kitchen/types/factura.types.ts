@@ -6,3 +6,7 @@ export interface Factura {
   paymentMethod: string
   order: Pedido
 }
+
+export interface CreateFacturaRequest {
+  paymentMethod: string
+}

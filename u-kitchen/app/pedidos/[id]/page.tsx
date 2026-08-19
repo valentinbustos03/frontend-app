@@ -15,6 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,8 +29,11 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { pedidoService } from "@/services/pedido-service"
+import { facturaService } from "@/services/factura-service"
 import { type Pedido, PedidoEstado } from "@/types/pedido.types"
 import { estadoColors, estadoIcons, estadoLabels } from "@/lib/catalogs"
+
+const PAYMENT_METHODS = ["Efectivo", "Tarjeta de débito", "Tarjeta de crédito", "Transferencia", "Mercado Pago"]
 
 const ALLOWED_TRANSITIONS: Record<PedidoEstado, PedidoEstado[]> = {
   [PedidoEstado.PENDIENTE]: [PedidoEstado.EN_PREPARACION, PedidoEstado.RECHAZADO, PedidoEstado.CANCELADO],
@@ -85,6 +90,8 @@ export default function PedidoDetailPage() {
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [pendingTerminal, setPendingTerminal] = useState<PedidoEstado | null>(null)
+  const [pendingFactura, setPendingFactura] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0])
 
   useEffect(() => {
     let active = true
@@ -147,6 +154,28 @@ export default function PedidoDetailPage() {
     await applyEstado(estado)
   }
 
+  const confirmFactura = async () => {
+    if (!pedido) return
+    try {
+      setUpdating(true)
+      const factura = await facturaService.createFactura(pedido.orderId, { paymentMethod })
+      setPedido({ ...pedido, bill: factura })
+      setPendingFactura(false)
+      toast({
+        title: "Factura generada",
+        description: `Se generó la factura del pedido #${pedido.orderId}`,
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo generar la factura",
+        variant: "destructive",
+      })
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -188,12 +217,7 @@ export default function PedidoDetailPage() {
         {pedido.status === PedidoEstado.ENTREGADO && !pedido.bill && (
           <Button
             className="bg-orange-600 hover:bg-orange-700 text-white"
-            onClick={() =>
-              toast({
-                title: "Próximamente",
-                description: "La generación de facturas se implementa en la siguiente fase.",
-              })
-            }
+            onClick={() => setPendingFactura(true)}
           >
             <Receipt className="mr-2 h-4 w-4" /> Generar factura
           </Button>
@@ -377,6 +401,42 @@ export default function PedidoDetailPage() {
             <AlertDialogAction
               onClick={confirmTerminal}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={pendingFactura} onOpenChange={(open) => !open && setPendingFactura(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Generar factura</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se generará la factura del pedido #{pedido.orderId} por {formatCurrency(pedido.subtotal || total)}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label>Método de pago</Label>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAYMENT_METHODS.map((method) => (
+                  <SelectItem key={method} value={method}>
+                    {method}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Volver</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmFactura}
+              disabled={updating}
+              className="bg-orange-600 hover:bg-orange-700 focus:ring-orange-600"
             >
               Confirmar
             </AlertDialogAction>
