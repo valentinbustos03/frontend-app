@@ -49,7 +49,7 @@ const menuItems: MenuGroup[] = [
       {
         label: "Dashboard",
         icon: LayoutDashboard,
-        href: "/",
+        href: "/dashboard",
         allowedFor: ["admin", "empleado"],
       },
       {
@@ -137,7 +137,6 @@ const menuItems: MenuGroup[] = [
         label: "Reportes",
         icon: BarChart3,
         href: "/reports",
-        disabled: true,
         allowedFor: ["admin"],
       },
       {
