@@ -65,6 +65,11 @@ export default function MenuPage() {
       setPlatos(response.data)
     } catch (error) {
       console.error("Error loading platos:", error)
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los platos",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }

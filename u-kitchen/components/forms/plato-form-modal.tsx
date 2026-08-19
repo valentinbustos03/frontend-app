@@ -155,8 +155,6 @@ export function PlatoFormModal({ open, onOpenChange, plato, onSuccess }: PlatoFo
         chef: formData.chef
       }
 
-      console.log(dataToSend) // Para debugging
-
       if (plato) {
         await platoService.updatePlato(plato.id, dataToSend)
         toast({

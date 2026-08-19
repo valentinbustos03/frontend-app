@@ -64,7 +64,6 @@ export function MesaFormModal({ open, onOpenChange, mesa, onSuccess }: MesaFormM
   const onSubmit = async (data: CreateMesaRequest) => {
     try {
       setLoading(true)
-      console.log(data)
       if (mesa) {
         await mesaService.updateMesa(mesa.id, data)
         toast({

@@ -1,4 +1,4 @@
-import type { Ingrediente, CreateIngredienteRequest, IngredienteFilters} from "@/types/ingrediente.types"
+import type { Ingrediente, CreateIngredienteRequest } from "@/types/ingrediente.types"
 import { PaginatedResponse } from "@/types/common.types";
 import { api } from "@/lib/api"
 
@@ -8,20 +8,9 @@ interface UpdateIngredienteResponse {
 }
 
 class IngredienteService {
-  async getIngredientes(filters?: IngredienteFilters): Promise<PaginatedResponse<Ingrediente>> {
+  async getIngredientes(): Promise<PaginatedResponse<Ingrediente>> {
     try {
-      const params = new URLSearchParams()
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== "") {
-            params.append(key, value.toString())
-          }
-        })
-      }
-      
-      const endpoint = `/ingredient/findAll?includeDetails=true`;
-      // ${params.toString() ? `?${params.toString()}` : ''}
-      return await api.get<PaginatedResponse<Ingrediente>>(endpoint);
+      return await api.get<PaginatedResponse<Ingrediente>>(`/ingredient/findAll?includeDetails=true`);
     } catch (error) {
       console.error("Error fetching ingredientes:", error)
       throw error

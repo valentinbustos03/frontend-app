@@ -7,6 +7,7 @@ import { Users, User, Briefcase } from "lucide-react";
 import { userService } from "@/services/usuario-service";
 import type { Usuario } from "@/types/usuario.types";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,7 +61,11 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("Error al cargar usuario:", error);
-      alert("Error al iniciar sesión. Intenta nuevamente.");
+      toast({
+        title: "Error",
+        description: "Error al iniciar sesión. Intenta nuevamente.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

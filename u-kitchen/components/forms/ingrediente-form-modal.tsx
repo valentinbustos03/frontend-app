@@ -108,7 +108,6 @@ export function IngredienteFormModal({ open, onOpenChange, ingrediente, onSucces
         ...data,
         suppliers: selectedSupplierIds.map(id => ({ id }))
       }
-      console.log(submitData)
       if (ingrediente) {
         await ingredienteService.updateIngrediente(ingrediente.id, submitData)
         toast({
