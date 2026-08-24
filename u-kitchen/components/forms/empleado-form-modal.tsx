@@ -88,7 +88,7 @@ export function EmpleadoFormModal({ open, onOpenChange, empleado, onSuccess }: E
         sector: empleado.sector || "",
         email: empleado.user?.email || "",
         fullName: empleado.user?.fullName || "",
-        password: empleado.user?.password || "",
+        password: "",
         phoneNumber: empleado.user?.phoneNumber || "",
       } : {
         taxId: "",
