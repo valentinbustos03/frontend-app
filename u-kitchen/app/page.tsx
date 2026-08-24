@@ -1,69 +1,52 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, User, Briefcase } from "lucide-react";
-import { userService } from "@/services/usuario-service";
-import type { Usuario } from "@/types/usuario.types";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
+import { ROLE_HOME } from "@/components/auth/AuthGuard";
+import { ApiError } from "@/lib/api";
+import { loginSchema, type LoginInput } from "@/lib/schemas";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, user } = useAuth(); // Usa el hook
+  const { login, user, currentRole } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Si ya hay user, redirige
-    if (user) {
-      router.replace("/dashboard");
-    }
-  }, [user, router]);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
-  const handleLoginAsRole = async (role: "admin" | "cliente" | "empleado") => {
-    setLoading(true);
+  useEffect(() => {
+    // Si ya hay sesion activa, no tiene sentido quedarse en el login
+    if (user && currentRole !== "guest") {
+      router.replace(ROLE_HOME[currentRole]);
+    }
+  }, [user, currentRole, router]);
+
+  const onSubmit = async (data: LoginInput) => {
     try {
-      let userId: string;
-      switch (role) {
-        case "admin":
-          userId = "1956859782010769570";
-          break;
-        case "cliente":
-          userId = "1956872646238933172";
-          break;
-        case "empleado":
-          userId = "1956874564491284676";
-          break;
-        default:
-          throw new Error("Rol inválido");
-      }
-      const fetchedUser: Usuario = await userService.getUsuarioById(userId);
-      
-      // Usa el login del hook (actualiza state y localStorage)
-      login(fetchedUser);
-      
-      // No necesitas router.refresh() ya que el hook actualiza reactivamente
-      // Redirige basado en rol (igual que antes)
-      switch (fetchedUser.role) {
-        case "admin":
-          router.replace("/dashboard");
-          break;
-        case "user":
-          if (fetchedUser.client) {
-            router.replace("/menu");
-          } else if (fetchedUser.employee) {
-            router.replace("/pedidos");
-          }
-          break;
-        default:
-          router.replace("/dashboard");
-      }
+      setLoading(true);
+      const sesion = await login(data.email, data.password);
+      router.replace(ROLE_HOME[sesion.accessRole]);
     } catch (error) {
-      console.error("Error al cargar usuario:", error);
+      console.error("Error al iniciar sesión:", error);
       toast({
         title: "Error",
-        description: "Error al iniciar sesión. Intenta nuevamente.",
+        description:
+          error instanceof ApiError && error.status === 401
+            ? "Credenciales inválidas."
+            : "No se pudo iniciar sesión. Intenta nuevamente.",
         variant: "destructive",
       });
     } finally {
@@ -77,47 +60,43 @@ export default function LoginPage() {
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold text-orange-600">Bienvenido a U Kitchen</h2>
           <p className="mt-2 text-center text-sm text-gray-300">
-            Selecciona tu rol para ingresar
+            Ingresá con tu cuenta para continuar
           </p>
         </div>
-        <div className="grid grid-cols-1 gap-4">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleLoginAsRole("admin")}>
-            <CardHeader className="flex flex-row items-center space-x-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
-                <Users className="h-6 w-6 text-orange-600" />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Iniciar sesión</CardTitle>
+            <CardDescription>Usá el email y la contraseña de tu usuario</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="nombre@ukitchen.com"
+                  {...register("email")}
+                />
+                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
-              <div>
-                <CardTitle className="text-lg">Ingresar como Admin</CardTitle>
-                <CardDescription>Acceso completo al sistema</CardDescription>
+              <div className="space-y-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  {...register("password")}
+                />
+                {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
               </div>
-            </CardHeader>
-          </Card>
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleLoginAsRole("cliente")}>
-            <CardHeader className="flex flex-row items-center space-x-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                <User className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Ingresar como Cliente</CardTitle>
-                <CardDescription>Gestión de pedidos y reservas</CardDescription>
-              </div>
-            </CardHeader>
-          </Card>
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleLoginAsRole("empleado")}>
-            <CardHeader className="flex flex-row items-center space-x-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                <Briefcase className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Ingresar como Empleado</CardTitle>
-                <CardDescription>Gestión operativa del restaurante</CardDescription>
-              </div>
-            </CardHeader>
-          </Card>
-        </div>
-        {loading && (
-          <div className="text-center text-sm text-gray-600">Cargando...</div>
-        )}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Ingresando..." : "Ingresar"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

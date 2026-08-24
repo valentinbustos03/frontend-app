@@ -18,10 +18,9 @@ export function Header() {
   const { logout } = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout(); 
-    router.push("/"); 
-    router.refresh();
+  const handleLogout = async () => {
+    await logout();
+    router.replace("/");
   };
 
   return (

@@ -6,6 +6,15 @@ const defaultHeaders = {
   "Content-Type": "application/json",
 }
 
+// Las rutas de /auth manejan el 401 por su cuenta (login con credenciales
+// inválidas, o el /auth/me inicial cuando todavía no hay sesión).
+function redirectToLogin(endpoint: string) {
+  if (typeof window === "undefined") return
+  if (endpoint.startsWith("/auth/")) return
+  if (window.location.pathname === "/") return
+  window.location.href = "/"
+}
+
 export class ApiError extends Error {
   readonly status: number
   readonly endpoint: string
@@ -79,6 +88,7 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
   try {
     const response = await fetch(url, {
       ...rest,
+      credentials: "include",
       headers: { ...defaultHeaders, ...headers },
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller.signal,
@@ -86,6 +96,9 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
 
     if (!response.ok) {
       const { message, details } = await parseErrorBody(response)
+      if (response.status === 401) {
+        redirectToLogin(endpoint)
+      }
       throw new ApiError(message, response.status, endpoint, details)
     }
 

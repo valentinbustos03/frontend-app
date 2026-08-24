@@ -1,3 +1,4 @@
+export * from "./auth.schema"
 export * from "./usuario.schema"
 export * from "./cliente.schema"
 export * from "./empleado.schema"

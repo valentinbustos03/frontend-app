@@ -20,7 +20,7 @@ const ROUTE_ACCESS: { prefix: string; roles: Role[] }[] = [
   { prefix: "/reports", roles: ["admin"] },
 ];
 
-const ROLE_HOME: Record<Role, string> = {
+export const ROLE_HOME: Record<Role, string> = {
   admin: "/dashboard",
   empleado: "/pedidos",
   cliente: "/menu",
