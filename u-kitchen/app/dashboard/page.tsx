@@ -69,22 +69,10 @@ function formatDayLabel(date: Date) {
 export default function DashboardPage() {
   const router = useRouter()
 
-  const empleadosLoader = useCallback(async () => {
-    const response = await empleadoService.getEmpleados()
-    return response.data
-  }, [])
-  const pedidosLoader = useCallback(async () => {
-    const response = await pedidoService.getPedidos()
-    return response.data
-  }, [])
-  const mesasLoader = useCallback(async () => {
-    const response = await mesaService.getMesas()
-    return response.data
-  }, [])
-  const ingredientesLoader = useCallback(async () => {
-    const response = await ingredienteService.getIngredientes()
-    return response.data
-  }, [])
+  const empleadosLoader = useCallback(() => empleadoService.getEmpleados(), [])
+  const pedidosLoader = useCallback(() => pedidoService.getPedidos(), [])
+  const mesasLoader = useCallback(() => mesaService.getMesas(), [])
+  const ingredientesLoader = useCallback(() => ingredienteService.getIngredientes(), [])
 
   const { items: empleados, loading: loadingEmpleados } = useResourceList<Empleado>(empleadosLoader)
   const { items: pedidos, loading: loadingPedidos } = useResourceList<Pedido>(pedidosLoader)

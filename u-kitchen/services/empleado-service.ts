@@ -1,9 +1,8 @@
 import type { Empleado, CreateEmpleadoRequest, EmpleadoFilters} from "@/types/empleado.types"
-import { PaginatedResponse } from "@/types/common.types"
 import { api, type ApiResponse } from "@/lib/api"
 
 class EmpleadoService {
-  async getEmpleados(filters?: EmpleadoFilters): Promise<PaginatedResponse<Empleado>> {
+  async getEmpleados(filters?: EmpleadoFilters): Promise<Empleado[]> {
     try {
       const params = new URLSearchParams()
       if (filters) {
@@ -15,7 +14,8 @@ class EmpleadoService {
       }
       
       const endpoint = `/employee/findAll${params.toString() ? `?${params.toString()}` : ''}`;
-      return await api.get<PaginatedResponse<Empleado>>(endpoint);
+      const response = await api.get<ApiResponse<Empleado[]>>(endpoint);
+      return response.data;
     } catch (error) {
       console.error("Error fetching empleados:", error)
       throw error
@@ -24,7 +24,8 @@ class EmpleadoService {
 
   async getEmpleadoById(id: string): Promise<Empleado> {
     try {
-      return await api.get<Empleado>(`/employee/id/${id}`);
+      const response = await api.get<ApiResponse<Empleado>>(`/employee/id/${id}`);
+      return response.data;
     } catch (error) {
       console.error("Error fetching empleado:", error)
       throw error
@@ -33,7 +34,8 @@ class EmpleadoService {
 
   async findByTaxId(taxId: string): Promise<Empleado> {
     try {
-      return await api.get<Empleado>(`/employee/taxId/${taxId}`);
+      const response = await api.get<ApiResponse<Empleado>>(`/employee/taxId/${taxId}`);
+      return response.data;
     } catch (error) {
       console.error("Error fetching empleado by taxId:", error)
       throw error

@@ -66,10 +66,7 @@ export default function EmpleadoDetailPage() {
   const empleadoLoader = useCallback(() => empleadoService.getEmpleadoById(params.id), [params.id])
   const { data: empleado, loading: loadingEmpleado, error } = useResource<Empleado>(empleadoLoader)
 
-  const pedidosLoader = useCallback(async () => {
-    const response = await pedidoService.getPedidos()
-    return response.data
-  }, [])
+  const pedidosLoader = useCallback(() => pedidoService.getPedidos(), [])
   const { items: allPedidos, loading: loadingPedidos } = useResourceList<Pedido>(pedidosLoader)
 
   const pedidosAtendidos = useMemo(() => {

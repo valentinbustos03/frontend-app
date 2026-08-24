@@ -5,13 +5,16 @@ Los cambios que dependen del backend están marcados con 🔗. El detalle del
 esquema de autenticación está en [`AUTENTICACION.md`](../../AUTENTICACION.md).
 
 Estado general: el CRUD de todos los módulos, las páginas de detalle `[id]/`,
-el dashboard y `mis-pedidos` están **completos y funcionando**. Lo que queda son
-features que dependen del backend, seguridad/auth y algo de deuda técnica.
+el dashboard y `mis-pedidos` están **completos**. Lo que queda son features que
+dependen del backend y algo de deuda técnica. Ojo que nada se puede probar de punta
+a punta hasta que exista el módulo `auth/` del backend (punto 1).
 
 ---
 
 ## ✅ Hecho (última tanda)
 
+- **Respuesta de los services normalizada** (ver el punto 2): todos desenvuelven
+  `{message, data}`, lo que arregla las páginas de detalle `[id]/`.
 - **Autenticación** (ver el detalle en el punto 1): login real con credenciales,
   `services/auth-service.ts`, `hooks/use-auth.tsx` sin `localStorage` y cookie
   enviada en cada request desde `lib/api.ts`.
@@ -56,14 +59,23 @@ resto de los controllers, y `data` es el usuario más un campo `accessRole`
 (`admin` | `cliente` | `empleado`) con el rol ya normalizado. Si el backend le pone
 otro nombre a ese campo, el único lugar a tocar es `Sesion` en `types/usuario.types.ts`.
 
-### 2. Normalizar la forma de respuesta de los services 🔗
-Hay **drift de contrato**: los `getById` devuelven la entidad cruda, pero
-`create`/`update` desenvuelven `response.data` de `{message, data}`. Además:
-- `pedido-service.getPedidoById` devuelve crudo pero `pedidos/[id]/page.tsx` desenvuelve `.data` defensivamente.
-- `mesaService.createMesa` devuelve crudo y `updateMesa` devuelve `{message, data}` (inconsistente dentro del mismo service).
-- `platoService`/`proveedorService` create/update devuelven crudo, distinto a cliente/empleado/pedido/ingrediente.
+### 2. Normalizar la forma de respuesta de los services ✅
+Resuelto. No hacía falta acordar nada con el backend: todos los controllers ya
+devuelven `{ message, data }`, el frontend no lo seguía de forma uniforme.
 
-- [ ] Definir una convención única de respuesta con el backend 🔗 y alinear todos los services.
+Ahora **todos** los métodos de los services desenvuelven `ApiResponse<T>` y devuelven
+la entidad (o `T[]` en los `findAll`). Con eso se arregló un bug que estaba tapado:
+los `getXById` tipaban la respuesta como la entidad pelada, así que las 6 páginas de
+detalle `[id]/` recibían el envoltorio y renderizaban campos `undefined` sin saltar al
+estado de error (`{message, data}` es truthy). Los listados no fallaban porque
+desenvolvían `.data` a mano en cada página.
+
+- [x] Un solo criterio en los 7 services que faltaban (incluidos `createMesa`/`updateMesa`, que eran
+      inconsistentes entre sí, y `plato`/`proveedor`, que devolvían crudo).
+- [x] Los consumidores dejaron de hacer `response.data`.
+- [x] Se eliminó el unwrap defensivo de `pedidos/[id]`.
+- [x] `types/common.types.ts` borrado: `PaginatedResponse<T>` mentía (el backend nunca
+      manda `total`/`page`/`limit`/`totalPages`) y quedó sin uso.
 
 ---
 
@@ -96,10 +108,6 @@ con el comentario "hay que modificar backend".
 
 ### 7. Detalles menores
 - [ ] Badge de chef comentado en `app/menu/page.tsx` — decidir si va o se borra.
-- [ ] `PaginatedResponse<T>` (`types/common.types.ts`) es el tipo declarado de todos los
-      `findAll`, pero el backend devuelve `{message, data}`: `total`/`page`/`limit`/`totalPages`
-      nunca llegan. Como la paginación es client-side, conviene tipar esas respuestas como
-      `ApiResponse<T[]>` y evaluar si se elimina.
 
 ### 8. Ajustes de tipos (deuda técnica, no bloqueante)
 - [ ] `types/plato.types.ts`: `Plato.chef: string` vs `CreatePlatoRequest.chef: Empleado` — revisar.

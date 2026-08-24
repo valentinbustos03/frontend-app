@@ -66,8 +66,7 @@ export default function EmpleadosPage() {
   const loadEmpleados = async () => {
     try {
       setLoading(true)
-      const response = await empleadoService.getEmpleados()
-      setEmpleados(response.data)
+      setEmpleados(await empleadoService.getEmpleados())
     } catch (error) {
       console.error("Error loading empleados:", error)
     } finally {

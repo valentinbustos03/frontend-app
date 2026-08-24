@@ -47,8 +47,7 @@ export default function IngredientesPage() {
   const loadIngredientes = async () => {
     try {
       setLoading(true)
-      const response = await ingredienteService.getIngredientes()
-      setIngredientes(response.data)
+      setIngredientes(await ingredienteService.getIngredientes())
     } catch (error) {
       toast({
         title: "Error",

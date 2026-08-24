@@ -32,8 +32,7 @@ export default function PlatosPage() {
   const loadPlatos = async () => {
     try {
       setLoading(true)
-      const response = await platoService.getPlatos()
-      setPlatos(response.data)
+      setPlatos(await platoService.getPlatos())
     } catch (error) {
       toast({
         title: "Error",

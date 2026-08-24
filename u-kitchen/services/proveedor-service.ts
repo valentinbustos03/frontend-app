@@ -1,9 +1,8 @@
 import type { Proveedor, CreateProveedorRequest, ProveedorFilters } from "@/types/proveedor.types"
-import { PaginatedResponse } from "@/types/common.types";
-import { api } from "@/lib/api"
+import { api, type ApiResponse } from "@/lib/api"
 
 class ProveedorService {
-  async getProveedores(filters?: ProveedorFilters): Promise<PaginatedResponse<Proveedor>> {
+  async getProveedores(filters?: ProveedorFilters): Promise<Proveedor[]> {
     try {
       const params = new URLSearchParams()
       if (filters) {
@@ -15,7 +14,8 @@ class ProveedorService {
       }
       
       const endpoint = `/supplier/findAll${params.toString() ? `?${params.toString()}` : ''}`;
-      return await api.get<PaginatedResponse<Proveedor>>(endpoint);
+      const response = await api.get<ApiResponse<Proveedor[]>>(endpoint);
+      return response.data;
     } catch (error) {
       console.error("Error fetching proveedores:", error)
       throw error
@@ -24,7 +24,8 @@ class ProveedorService {
 
   async getProveedorById(id: string): Promise<Proveedor> {
     try {
-      return await api.get<Proveedor>(`/supplier/id/${id}`);
+      const response = await api.get<ApiResponse<Proveedor>>(`/supplier/id/${id}`);
+      return response.data;
     } catch (error) {
       console.error("Error fetching proveedor:", error)
       throw error
@@ -33,7 +34,8 @@ class ProveedorService {
 
   async findByTaxId(taxId: string): Promise<Proveedor> {
     try {
-      return await api.get<Proveedor>(`/supplier/taxId/${taxId}`);
+      const response = await api.get<ApiResponse<Proveedor>>(`/supplier/taxId/${taxId}`);
+      return response.data;
     } catch (error) {
       console.error("Error fetching proveedor by taxId:", error)
       throw error
@@ -42,7 +44,8 @@ class ProveedorService {
 
   async createProveedor(proveedor: CreateProveedorRequest): Promise<Proveedor> {
     try {
-      return await api.post<Proveedor>('/supplier/add', proveedor);
+      const response = await api.post<ApiResponse<Proveedor>>('/supplier/add', proveedor);
+      return response.data;
     } catch (error) {
       console.error("Error creating proveedor:", error)
       throw error
@@ -51,7 +54,8 @@ class ProveedorService {
 
   async updateProveedor(id: string, proveedor: Partial<CreateProveedorRequest>): Promise<Proveedor> {
     try {
-      return await api.put<Proveedor>(`/supplier/${id}`, proveedor);
+      const response = await api.put<ApiResponse<Proveedor>>(`/supplier/${id}`, proveedor);
+      return response.data;
     } catch (error) {
       console.error("Error updating proveedor:", error)
       throw error

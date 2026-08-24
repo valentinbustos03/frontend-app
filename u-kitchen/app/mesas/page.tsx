@@ -34,8 +34,7 @@ export default function MesasPage() {
   const loadMesas = async () => {
     try {
       setLoading(true)
-      const response = await mesaService.getMesas()
-      setMesas(response.data)
+      setMesas(await mesaService.getMesas())
     } catch (error) {
       toast({
         title: "Error",
@@ -83,10 +82,10 @@ export default function MesasPage() {
   const handleToggleOcupada = async (mesa: Mesa) => {
     try {
       const updatedMesa = await mesaService.toggleOcupada(mesa)
-      setMesas(mesas.map((m) => (m.id === mesa.id ? updatedMesa.data : m)))
+      setMesas(mesas.map((m) => (m.id === mesa.id ? updatedMesa : m)))
       toast({
         title: "Estado actualizado",
-        description: `La mesa ${mesa.cod} ahora está ${updatedMesa.data.occupied ? "ocupada" : "libre"}`,
+        description: `La mesa ${mesa.cod} ahora está ${updatedMesa.occupied ? "ocupada" : "libre"}`,
       })
     } catch (error) {
       toast({

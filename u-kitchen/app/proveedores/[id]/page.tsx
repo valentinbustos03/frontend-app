@@ -31,10 +31,7 @@ export default function ProveedorDetailPage() {
   const loader = useCallback(() => proveedorService.getProveedorById(params.id), [params.id])
   const { data: proveedor, loading, error } = useResource<Proveedor>(loader)
 
-  const ingredientesLoader = useCallback(async () => {
-    const response = await ingredienteService.getIngredientes()
-    return response.data
-  }, [])
+  const ingredientesLoader = useCallback(() => ingredienteService.getIngredientes(), [])
   const { items: allIngredientes, loading: loadingIngredientes } = useResourceList<Ingrediente>(ingredientesLoader)
 
   const ingredientesAsociados = useMemo(() => {

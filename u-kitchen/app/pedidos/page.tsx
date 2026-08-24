@@ -45,8 +45,7 @@ export default function PedidosPage() {
   const loadPedidos = async () => {
     try {
       setLoading(true)
-      const response = await pedidoService.getPedidos()
-      setPedidos(response.data)
+      setPedidos(await pedidoService.getPedidos())
     } catch (error) {
       toast({
         title: "Error",

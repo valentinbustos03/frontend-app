@@ -1,9 +1,8 @@
 import type { Plato, CreatePlatoRequest, PlatoFilters } from "@/types/plato.types"
-import { PaginatedResponse } from "@/types/common.types";
-import { api } from "@/lib/api"
+import { api, type ApiResponse } from "@/lib/api"
 
 class PlatoService {
-  async getPlatos(filters?: PlatoFilters): Promise<PaginatedResponse<Plato>> {
+  async getPlatos(filters?: PlatoFilters): Promise<Plato[]> {
     try {
       const params = new URLSearchParams()
       if (filters) {
@@ -15,7 +14,8 @@ class PlatoService {
       }
       
       const endpoint = `/dish/findAll${params.toString() ? `?${params.toString()}` : ''}`;
-      return await api.get<PaginatedResponse<Plato>>(endpoint);
+      const response = await api.get<ApiResponse<Plato[]>>(endpoint);
+      return response.data;
     } catch (error) {
       console.error("Error fetching platos:", error)
       throw error
@@ -24,7 +24,8 @@ class PlatoService {
 
   async getPlatoById(id: string): Promise<Plato> {
     try {
-      return await api.get<Plato>(`/dish/id/${id}`);
+      const response = await api.get<ApiResponse<Plato>>(`/dish/id/${id}`);
+      return response.data;
     } catch (error) {
       console.error("Error fetching plato:", error)
       throw error
@@ -33,7 +34,8 @@ class PlatoService {
 
   async createPlato(plato: CreatePlatoRequest): Promise<Plato> {
     try {
-      return await api.post<Plato>('/dish/add', plato);
+      const response = await api.post<ApiResponse<Plato>>('/dish/add', plato);
+      return response.data;
     } catch (error) {
       console.error("Error creating plato:", error)
       throw error
@@ -42,7 +44,8 @@ class PlatoService {
 
   async updatePlato(id: string, plato: Partial<CreatePlatoRequest>): Promise<Plato> {
     try {
-      return await api.put<Plato>(`/dish/${id}`, plato);
+      const response = await api.put<ApiResponse<Plato>>(`/dish/${id}`, plato);
+      return response.data;
     } catch (error) {
       console.error("Error updating plato:", error)
       throw error

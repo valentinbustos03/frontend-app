@@ -36,10 +36,7 @@ export default function PlatoDetailPage() {
   const platoLoader = useCallback(() => platoService.getPlatoById(params.id), [params.id])
   const { data: plato, loading, error } = useResource<Plato>(platoLoader)
 
-  const empleadosLoader = useCallback(async () => {
-    const response = await empleadoService.getEmpleados()
-    return response.data
-  }, [])
+  const empleadosLoader = useCallback(() => empleadoService.getEmpleados(), [])
   const { items: empleados } = useResourceList<Empleado>(empleadosLoader)
 
   if (loading) {

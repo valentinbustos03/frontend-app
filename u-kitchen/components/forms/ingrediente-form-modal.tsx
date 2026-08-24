@@ -57,8 +57,8 @@ export function IngredienteFormModal({ open, onOpenChange, ingrediente, onSucces
   // Cargar proveedores cuando se abre el modal
   useEffect(() => {
     if (open) {
-      proveedorService.getProveedores().then((response) => {
-        setProveedores(response.data)
+      proveedorService.getProveedores().then((proveedores) => {
+        setProveedores(proveedores)
       }).catch((error) => {
         console.error("Error loading proveedores:", error)
       })

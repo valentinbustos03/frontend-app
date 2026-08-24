@@ -1,9 +1,8 @@
 import type { Cliente, CreateClienteRequest, ClienteFilters} from "@/types/cliente.types"
-import { PaginatedResponse } from "@/types/common.types"
 import { api, type ApiResponse } from "@/lib/api"
 
 class ClienteService {
-  async getClientes(filters?: ClienteFilters): Promise<PaginatedResponse<Cliente>> {
+  async getClientes(filters?: ClienteFilters): Promise<Cliente[]> {
     try {
       const params = new URLSearchParams()
       if (filters) {
@@ -15,7 +14,8 @@ class ClienteService {
       }
       
       const endpoint = `/client/findAll${params.toString() ? `?${params.toString()}` : ''}`;
-      return await api.get<PaginatedResponse<Cliente>>(endpoint);
+      const response = await api.get<ApiResponse<Cliente[]>>(endpoint);
+      return response.data;
     } catch (error) {
       console.error("Error fetching clientes:", error)
       throw error
@@ -24,7 +24,8 @@ class ClienteService {
 
   async getClienteById(id: string): Promise<Cliente> {
     try {
-      return await api.get<Cliente>(`/client/id/${id}`);
+      const response = await api.get<ApiResponse<Cliente>>(`/client/id/${id}`);
+      return response.data;
     } catch (error) {
       console.error("Error fetching cliente:", error)
       throw error
@@ -33,7 +34,8 @@ class ClienteService {
 
   async findByDni(dni: number | string): Promise<Cliente> {
     try {
-      return await api.get<Cliente>(`/client/dni/${dni}`);
+      const response = await api.get<ApiResponse<Cliente>>(`/client/dni/${dni}`);
+      return response.data;
     } catch (error) {
       console.error("Error fetching cliente by DNI:", error)
       throw error

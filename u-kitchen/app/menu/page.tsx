@@ -61,8 +61,7 @@ export default function MenuPage() {
   const loadPlatos = async () => {
     try {
       setLoading(true)
-      const response = await platoService.getPlatos()
-      setPlatos(response.data)
+      setPlatos(await platoService.getPlatos())
     } catch (error) {
       console.error("Error loading platos:", error)
       toast({
@@ -77,13 +76,13 @@ export default function MenuPage() {
 
   const loadMesasAndWaiters = async () => {
     try {
-      const [mesasResponse, empleadosResponse] = await Promise.all([
+      const [mesas, empleados] = await Promise.all([
         mesaService.getMesas(),
         empleadoService.getEmpleados()
       ])
-      setMesas(mesasResponse.data)
+      setMesas(mesas)
       // Filtrar solo meseros (role WAITER)
-      setWaiters(empleadosResponse.data.filter((emp: Empleado) => emp.role === EmployeeRole.WAITER))
+      setWaiters(empleados.filter((emp) => emp.role === EmployeeRole.WAITER))
     } catch (error) {
       console.error("Error loading mesas/waiters:", error)
       toast({

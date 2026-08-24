@@ -98,10 +98,8 @@ export default function PedidoDetailPage() {
     const load = async () => {
       try {
         setLoading(true)
-        const response = await pedidoService.getPedidoById(params.id)
-        // Backend devuelve { message, data: Pedido } — ajustamos defensivamente.
-        const data = (response as unknown as { data?: Pedido })?.data ?? response
-        if (active) setPedido(data as Pedido)
+        const pedido = await pedidoService.getPedidoById(params.id)
+        if (active) setPedido(pedido)
       } catch (error) {
         toast({
           title: "Error",

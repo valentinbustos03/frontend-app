@@ -1,9 +1,8 @@
 import type { Pedido, CreatePedidoRequest, PedidoFilters, PedidoEstado } from "@/types/pedido.types"
-import { PaginatedResponse } from "@/types/common.types";
 import { api, type ApiResponse } from "@/lib/api"
 
 class PedidoService { 
-  async getPedidos(filters?: PedidoFilters): Promise<PaginatedResponse<Pedido>> {
+  async getPedidos(filters?: PedidoFilters): Promise<Pedido[]> {
     try {
       const params = new URLSearchParams()
       if (filters) {
@@ -15,7 +14,8 @@ class PedidoService {
       }
       
       const endpoint = `/order/findAll${params.toString() ? `?${params.toString()}` : ''}`;
-      return await api.get<PaginatedResponse<Pedido>>(endpoint);
+      const response = await api.get<ApiResponse<Pedido[]>>(endpoint);
+      return response.data;
     } catch (error) {
       console.error("Error fetching pedidos:", error)
       throw error
@@ -24,7 +24,8 @@ class PedidoService {
 
   async getPedidoById(id: string): Promise<Pedido> {
     try {
-      return await api.get<Pedido>(`/order/orderId/${id}`);
+      const response = await api.get<ApiResponse<Pedido>>(`/order/orderId/${id}`);
+      return response.data;
     } catch (error) {
       console.error("Error fetching pedido:", error)
       throw error
@@ -62,8 +63,8 @@ class PedidoService {
 
   async findAllByClientId(clientId: string): Promise<Pedido[]> {
     try {
-      const response = await api.get<ApiResponse<Pedido[]> | Pedido[]>(`/order/findAllClientOrders/${clientId}`)
-      return Array.isArray(response) ? response : response.data
+      const response = await api.get<ApiResponse<Pedido[]>>(`/order/findAllClientOrders/${clientId}`)
+      return response.data
     } catch (error) {
       console.error("Error fetching client orders:", error)
       throw error

@@ -1,14 +1,8 @@
 import type { Mesa, CreateMesaRequest, MesaFilters } from "@/types/mesa.types"
-import { PaginatedResponse } from "@/types/common.types";
-import { api } from "@/lib/api"
-
-interface UpdateMesaResponse {
-  message: string;
-  data: Mesa;
-}
+import { api, type ApiResponse } from "@/lib/api"
 
 class MesaService {
-  async getMesas(filters?: MesaFilters): Promise<PaginatedResponse<Mesa>> {
+  async getMesas(filters?: MesaFilters): Promise<Mesa[]> {
     try {
       const params = new URLSearchParams()
       if (filters) {
@@ -20,7 +14,8 @@ class MesaService {
       }
       
       const endpoint = `/table/findAll${params.toString() ? `?${params.toString()}` : ''}`;
-      return await api.get<PaginatedResponse<Mesa>>(endpoint);
+      const response = await api.get<ApiResponse<Mesa[]>>(endpoint);
+      return response.data;
     } catch (error) {
       console.error("Error fetching mesas:", error)
       throw error
@@ -29,7 +24,8 @@ class MesaService {
 
   async getMesaById(id: string): Promise<Mesa> {
     try {
-      return await api.get<Mesa>(`/table/id/${id}`);
+      const response = await api.get<ApiResponse<Mesa>>(`/table/id/${id}`);
+      return response.data;
     } catch (error) {
       console.error("Error fetching mesa:", error)
       throw error
@@ -38,7 +34,8 @@ class MesaService {
 
   async findByCod(cod: string): Promise<Mesa> {
     try {
-      return await api.get<Mesa>(`/table/cod/${cod}`);
+      const response = await api.get<ApiResponse<Mesa>>(`/table/cod/${cod}`);
+      return response.data;
     } catch (error) {
       console.error("Error fetching mesa by cod:", error)
       throw error
@@ -48,17 +45,19 @@ class MesaService {
   async createMesa(mesa: CreateMesaRequest): Promise<Mesa> {
     try {
       const payload = { ...mesa };
-      return await api.post<Mesa>('/table/add', payload);
+      const response = await api.post<ApiResponse<Mesa>>('/table/add', payload);
+      return response.data;
     } catch (error) {
       console.error("Error creating mesa:", error)
       throw error
     }
   }
 
-  async updateMesa(id: string, mesa: Partial<CreateMesaRequest>): Promise<UpdateMesaResponse> {
+  async updateMesa(id: string, mesa: Partial<CreateMesaRequest>): Promise<Mesa> {
     try {
       const payload = { ...mesa };
-      return await api.put<UpdateMesaResponse>(`/table/${id}`, payload);
+      const response = await api.put<ApiResponse<Mesa>>(`/table/${id}`, payload);
+      return response.data;
     } catch (error) {
       console.error("Error updating mesa:", error)
       throw error
@@ -74,13 +73,14 @@ class MesaService {
     }
   }
 
-  async toggleOcupada(mesa: Mesa): Promise<UpdateMesaResponse> {
+  async toggleOcupada(mesa: Mesa): Promise<Mesa> {
     try {
       const payload = { 
         ...mesa, 
         occupied: !mesa.occupied,
       };
-      return await api.put<UpdateMesaResponse>(`/table/${mesa.id}`, payload);
+      const response = await api.put<ApiResponse<Mesa>>(`/table/${mesa.id}`, payload);
+      return response.data;
     } catch (error) {
       console.error("Error toggling mesa ocupada:", error)
       throw error

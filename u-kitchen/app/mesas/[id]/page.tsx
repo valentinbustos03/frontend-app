@@ -56,10 +56,7 @@ export default function MesaDetailPage() {
   const mesaLoader = useCallback(() => mesaService.getMesaById(params.id), [params.id])
   const { data: mesa, loading: loadingMesa, error } = useResource<Mesa>(mesaLoader)
 
-  const pedidosLoader = useCallback(async () => {
-    const response = await pedidoService.getPedidos()
-    return response.data
-  }, [])
+  const pedidosLoader = useCallback(() => pedidoService.getPedidos(), [])
   const { items: allPedidos, loading: loadingPedidos } = useResourceList<Pedido>(pedidosLoader)
 
   const pedidosMesa = useMemo(() => {

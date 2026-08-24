@@ -34,8 +34,7 @@ export default function ProveedoresPage() {
   const loadProveedores = async () => {
     try {
       setLoading(true)
-      const response = await proveedorService.getProveedores()
-      setProveedores(response.data)
+      setProveedores(await proveedorService.getProveedores())
     } catch (error) {
       toast({
         title: "Error",

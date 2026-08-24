@@ -85,10 +85,7 @@ export default function ClientesPage() {
   const [modalState, setModalState] = useState<Cliente | "new" | null>(null)
   const [deletingCliente, setDeletingCliente] = useState<Cliente | null>(null)
 
-  const loader = useCallback(async () => {
-    const response = await clienteService.getClientes()
-    return response.data
-  }, [])
+  const loader = useCallback(() => clienteService.getClientes(), [])
 
   const {
     items: clientes,

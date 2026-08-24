@@ -56,10 +56,7 @@ function formatDayLabel(date: Date) {
 export default function ReportsPage() {
   const { toast } = useToast()
 
-  const pedidosLoader = useCallback(async () => {
-    const response = await pedidoService.getPedidos()
-    return response.data
-  }, [])
+  const pedidosLoader = useCallback(() => pedidoService.getPedidos(), [])
 
   const { items: pedidos, loading } = useResourceList<Pedido>(pedidosLoader, {
     onError: () =>
