@@ -10,13 +10,15 @@ punta a punta hasta que exista el módulo `auth/` del backend (punto 1).
 
 El backend avanzó fuerte (`v2.04` → `v2.15`: reservas, promociones, recetas con
 cantidad, control de stock, listados filtrados). Lo que se rompía ya está adaptado
-(punto 3) y las reservas ya están (punto 4). Queda promociones y los filtros
-server-side: puntos 5 y 6.
+(punto 3), y reservas, promociones y los filtros server-side ya están (puntos 4 a 6).
+De acá en adelante no queda nada bloqueado por el backend salvo la autenticación.
 
 ---
 
 ## ✅ Hecho (última tanda)
 
+- **Filtros server-side y stock bajo** (ver el punto 6).
+- **Módulo Promociones** (ver el punto 5): CRUD + descuentos visibles en el menú.
 - **Módulo Reservas** (ver el punto 4): tipos, schema, service, listado y form.
 - **Frontend adaptado a los cambios del backend** (ver el punto 3): recetas con
   cantidad, `unitCost`, errores de negocio del pedido y `PUT` acotado.
@@ -154,31 +156,57 @@ contra la entidad real: `{ id, dateTime, numberOfPeople, status, client, table }
       así que se muestra el `409` que devuelve el backend.
 - [x] Item del sidebar habilitado y regla `/reservas` (admin + empleado) en `AuthGuard`.
 
-### 5. Módulo Promociones 🔗 (backend listo)
-CRUD nuevo en `/promotion`, sin nada en el frontend todavía. Entidad:
-`{ id, cod, name, description?, discountPercentage, dateFrom, dateTo, active, dishes }`.
+### 5. Módulo Promociones ✅
+CRUD contra `/promotion`, más el descuento reflejado en el menú.
 
-El backend aplica automáticamente **el mejor descuento vigente por plato** al calcular
-`Order.subtotal`, así que la UI no calcula nada: solo administra promociones y, si se
-quiere, las muestra.
+- [x] `types/promocion.types.ts`, `lib/schemas/promocion.schema.ts` y
+      `services/promocion-service.ts` (el `getPromociones` acepta `{ current: true }`).
+- [x] `app/promociones/page.tsx`: listado con búsqueda por nombre/código, filtro por
+      estado (vigente / activa fuera de fecha / inactiva) y stats.
+- [x] `components/forms/promocion-form-modal.tsx` con multi-select de platos
+      (el backend exige al menos uno) y checkbox de `active`.
+- [x] Item en el sidebar (grupo Inventario, al lado de Platos) y regla `/promociones`
+      (admin + empleado) en `AuthGuard`, igual que `/platos`.
+- [x] `lib/promociones.ts` replica el criterio del backend (mejor descuento vigente por
+      plato) y lo usa el menú: el precio con descuento, el precio original tachado y un
+      badge `-X%` en cada plato, más el total del carrito ya descontado. Antes el total
+      del menú no coincidía con el `subtotal` que facturaba el backend.
 
-- [ ] `types/promocion.types.ts`, `lib/schemas/promocion.schema.ts`,
-      `services/promocion-service.ts`.
-- [ ] Página `app/promociones/page.tsx` + form (multi-select de platos, `dishes`
-      requiere al menos uno) e item en el sidebar.
-- [ ] Opcional: badge de descuento en el menú usando `GET /promotion/findAll?current=true`.
+**Sobre las fechas**: los inputs son de día entero, así que el form manda `dateFrom` al
+inicio del primer día y `dateTo` al final del último (`23:59:59`). Si no, una promo que
+termina "el 30" dejaba de aplicar a las 00:00 de ese día. Como contrapartida, editar una
+promo cargada con horario intermedio la redondea al día completo.
 
-### 6. Filtros server-side y stock bajo 🔗 (backend listo)
-Los listados filtran todo en el cliente. Ahora hay endpoints para hacerlo bien:
+### 6. Filtros server-side y stock bajo ✅
 
-- [ ] `GET /ingredient/lowStock` — reemplaza el filtro "stock bajo" client-side de
-      `app/ingredientes/page.tsx`. Sirve también para un widget en el dashboard.
-- [ ] `GET /order/findAll?status=&date=` — `date` en formato `YYYY-MM-DD`.
-- [ ] `GET /employee/findAll?shift=&role=&minCalification=` — ojo que
-      `minCalification` solo matchea `Waiter` (un `Chef` nunca lo cumple).
-- [ ] `PedidoFilters` / `EmpleadoFilters` en `types/` declaran filtros que el backend
-      no conoce (`fechaDesde`, `clienteId`, `mesaId`...) — alinearlos con lo que
-      realmente acepta.
+- [x] **`GET /ingredient/lowStock`**: la página de ingredientes ya no calcula
+      `stock <= stockLimit` en el cliente. Al cargar pide el listado completo y el de
+      bajo stock en paralelo, y usa el `Set` de IDs que devuelve el backend para el
+      filtro, los badges de cada fila y las tarjetas de stock bajo/normal.
+- [x] **`GET /order/findAll?status=`**: el filtro de estado de `app/pedidos/page.tsx`
+      viaja al backend y recarga al cambiar. Cuando hay un estado filtrado y se cambia
+      el estado de un pedido, se lo saca del listado en vez de dejarlo contradiciendo
+      al filtro.
+- [x] **`GET /employee/findAll?shift=&role=&minCalification=`**: rol y turno pasaron al
+      backend, y se agregó un select de calificación mínima. Está etiquetado
+      "(solo meseros)" porque `minCalification` es un campo de `Waiter`: filtrar por él
+      excluye a los chefs, que nunca lo cumplen.
+- [x] También aprovechan el filtro de rol el menú (pide solo meseros) y el form de
+      platos (pide solo chefs), en vez de traer todos y filtrar en memoria.
+- [x] `PedidoFilters` pasó a `{ status?, date? }` y `EmpleadoFilters` a
+      `{ shift?, role?, minCalification? }`: antes declaraban filtros inventados
+      (`fechaDesde`, `clienteId`, `mesaId`, `rendimiento`, `search`).
+
+**Lo que quedó client-side, a propósito:**
+
+- El **rango de fechas** de pedidos. El endpoint acepta un solo día exacto
+  (`?date=YYYY-MM-DD`), no un rango, y pasar de rango a día suelto era perder
+  funcionalidad. Si el backend algún día acepta `dateFrom`/`dateTo`, es un cambio de
+  tres líneas.
+- La **búsqueda por texto** de empleados: no hay endpoint.
+- El **stock bajo del dashboard**. Ya tiene el listado completo en memoria para otras
+  tarjetas y el criterio es idéntico al del endpoint, así que pedirlo de nuevo sería
+  una request al aire.
 
 ### 7. Página Configuración
 - [ ] `/settings` — item deshabilitado en el sidebar, sin página.
@@ -206,6 +234,10 @@ con el comentario "hay que modificar backend".
 - [ ] `types/plato.types.ts`: `Plato.chef: string` vs `CreatePlatoRequest.chef: Empleado` — revisar.
 - [ ] `types/empleado.types.ts`: `shift: string` en vez del enum `EmployeeShift`; considerar discriminated union por rol.
 - [ ] `types/cliente.types.ts`: `orderHistory: Pedido[]` es requerido pero normalmente no viene poblado.
+- [ ] `ClienteFilters`, `MesaFilters`, `PlatoFilters`, `ProveedorFilters` e
+      `IngredienteFilters` declaran filtros que el backend no acepta (los `findAll` de esos
+      módulos no reciben query params). Los services los aceptan y los mandan al aire;
+      ninguna página los usa. Borrarlos o implementarlos en el backend.
 - [ ] `pedido.status` se compara con literal `"entregado"` en `clientes/[id]/page.tsx` en vez del enum `PedidoEstado`.
 
 ---
@@ -223,7 +255,7 @@ Los endpoints nuevos agregados en los services **existen y coinciden** en el bac
 | `GET /order/findAllClientOrders/:clientId` | ✅ existe (el param se llama `:id`; requiere ID numérico) |
 | `POST /order/:id/bill/add` | ✅ existe (usado por la generación de facturas) |
 | `GET /order/bill/findAll` | ✅ existe (sin usar todavía — punto 9) |
-| `GET /ingredient/lowStock` | ✅ existe (sin usar todavía — punto 6) |
-| `GET /promotion/*` | ✅ existe (sin usar todavía — punto 5) |
+| `GET /ingredient/lowStock` | ✅ existe (usado por el listado de ingredientes) |
+| `GET /promotion/*` | ✅ existe (usado por el módulo de promociones) |
 | `GET /reservation/*` | ✅ existe (usado por el módulo de reservas) |
 | `POST /auth/login`, `/auth/logout`, `/auth/me` | ❌ **no existe** — punto 1 |
