@@ -12,6 +12,16 @@ class IngredienteService {
     }
   }
 
+  async getIngredientesBajoStock(): Promise<Ingrediente[]> {
+    try {
+      const response = await api.get<ApiResponse<Ingrediente[]>>(`/ingredient/lowStock`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching ingredientes bajo stock:", error)
+      throw error
+    }
+  }
+
   async getIngredienteById(id: string): Promise<Ingrediente> {
     try {
       const response = await api.get<ApiResponse<Ingrediente>>(`/ingredient/id/${id}`);

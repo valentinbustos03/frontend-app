@@ -45,10 +45,10 @@ export interface CreateEmpleadoRequest {
   sector?: string
 }
 
-// Filtros para Empleado
+// Filtros que acepta GET /employee/findAll.
+// minCalification es un campo de Waiter, así que filtrar por él excluye a los chefs.
 export interface EmpleadoFilters {
-  search?: string
-  shift?: string
+  shift?: EmployeeShift
   role?: EmployeeRole
-  rendimiento?: "alto" | "medio" | "bajo"
+  minCalification?: number
 }

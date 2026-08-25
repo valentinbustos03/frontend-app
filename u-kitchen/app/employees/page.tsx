@@ -53,20 +53,27 @@ export default function EmpleadosPage() {
   const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | undefined>()
   const [tipoFilter, setTipoFilter] = useState<EmployeeRole | "all">("all")
   const [turnoFilter, setTurnoFilter] = useState<EmployeeShift | "all">("all")
+  const [calificationFilter, setCalificationFilter] = useState<string>("all")
   const { page, setPage, totalPages, pageItems } = usePagination(filteredEmpleados)
 
   useEffect(() => {
     loadEmpleados()
-  }, [])
+  }, [tipoFilter, turnoFilter, calificationFilter])
 
   useEffect(() => {
     filterEmpleados()
-  }, [empleados, searchTerm, tipoFilter, turnoFilter])
+  }, [empleados, searchTerm])
 
   const loadEmpleados = async () => {
     try {
       setLoading(true)
-      setEmpleados(await empleadoService.getEmpleados())
+      setEmpleados(
+        await empleadoService.getEmpleados({
+          role: tipoFilter === "all" ? undefined : tipoFilter,
+          shift: turnoFilter === "all" ? undefined : turnoFilter,
+          minCalification: calificationFilter === "all" ? undefined : Number(calificationFilter),
+        }),
+      )
     } catch (error) {
       console.error("Error loading empleados:", error)
     } finally {
@@ -74,26 +81,17 @@ export default function EmpleadosPage() {
     }
   }
 
+  // El rol, el turno y la calificación mínima los filtra el backend; acá queda solo la
+  // búsqueda por texto, que no tiene endpoint.
   const filterEmpleados = () => {
     let filtered = empleados
 
-    // Filtro de búsqueda por texto (dejar como está)
     if (searchTerm) {
       filtered = filtered.filter(
         (empleado) =>
           empleado.taxId.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (empleado.user?.fullName && empleado.user.fullName.toLowerCase().includes(searchTerm.toLowerCase())),
       )
-    }
-
-    // Filtro por tipo (rol)
-    if (tipoFilter !== "all") {
-      filtered = filtered.filter((empleado) => empleado.role === tipoFilter)
-    }
-
-    // Filtro por turno
-    if (turnoFilter !== "all") {
-      filtered = filtered.filter((empleado) => empleado.shift === turnoFilter)
     }
 
     setFilteredEmpleados(filtered)
@@ -236,6 +234,17 @@ export default function EmpleadosPage() {
                   <SelectItem value={EmployeeShift.MAÑANA}>Mañana</SelectItem>
                   <SelectItem value={EmployeeShift.TARDE}>Tarde</SelectItem>
                   <SelectItem value={EmployeeShift.NOCHE}>Noche</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={calificationFilter} onValueChange={setCalificationFilter}>
+                <SelectTrigger className="w-[160px] sm:w-[200px]">
+                  <SelectValue placeholder="Calificación mínima" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Cualquier calificación</SelectItem>
+                  <SelectItem value="3">3+ (solo meseros)</SelectItem>
+                  <SelectItem value="4">4+ (solo meseros)</SelectItem>
+                  <SelectItem value="4.5">4.5+ (solo meseros)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

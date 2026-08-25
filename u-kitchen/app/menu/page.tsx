@@ -91,13 +91,12 @@ export default function MenuPage() {
 
   const loadMesasAndWaiters = async () => {
     try {
-      const [mesas, empleados] = await Promise.all([
+      const [mesas, waiters] = await Promise.all([
         mesaService.getMesas(),
-        empleadoService.getEmpleados()
+        empleadoService.getEmpleados({ role: EmployeeRole.WAITER })
       ])
       setMesas(mesas)
-      // Filtrar solo meseros (role WAITER)
-      setWaiters(empleados.filter((emp) => emp.role === EmployeeRole.WAITER))
+      setWaiters(waiters)
     } catch (error) {
       console.error("Error loading mesas/waiters:", error)
       toast({

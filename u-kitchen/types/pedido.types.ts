@@ -79,11 +79,8 @@ export interface TransicionInvalida {
   to: PedidoEstado
 }
 
-// Filtros para Pedido
+// Filtros que acepta GET /order/findAll
 export interface PedidoFilters {
-  fechaDesde?: Date
-  fechaHasta?: Date
-  estado?: PedidoEstado
-  clienteId?: string
-  mesaId?: string
+  status?: PedidoEstado
+  date?: string // YYYY-MM-DD
 }

@@ -41,12 +41,16 @@ export default function PedidosPage() {
 
   useEffect(() => {
     loadPedidos()
-  }, [])
+  }, [estadoFilter])
 
   const loadPedidos = async () => {
     try {
       setLoading(true)
-      setPedidos(await pedidoService.getPedidos())
+      setPedidos(
+        await pedidoService.getPedidos(
+          estadoFilter === "all" ? undefined : { status: estadoFilter as PedidoEstado },
+        ),
+      )
     } catch (error) {
       toast({
         title: "Error",
@@ -58,24 +62,29 @@ export default function PedidosPage() {
     }
   }
 
+  // El estado lo filtra el backend. El rango de fechas queda acá porque el endpoint
+  // solo acepta un día exacto (`?date=YYYY-MM-DD`), no un rango.
   const filteredPedidos = useMemo(() => {
     return pedidos.filter((pedido) => {
-      const matchesEstado = estadoFilter === "all" || pedido.status === estadoFilter
-
       const matchesFechaDesde = !fechaDesde || new Date(pedido.startTime) >= new Date(fechaDesde)
 
       const matchesFechaHasta = !fechaHasta || new Date(pedido.startTime) <= new Date(fechaHasta + "T23:59:59")
 
-      return matchesEstado && matchesFechaDesde && matchesFechaHasta
+      return matchesFechaDesde && matchesFechaHasta
     })
-  }, [pedidos, estadoFilter, fechaDesde, fechaHasta])
+  }, [pedidos, fechaDesde, fechaHasta])
 
   const { page, setPage, totalPages, pageItems } = usePagination(filteredPedidos)
 
   const applyEstado = async (pedido: Pedido, nuevoEstado: PedidoEstado) => {
     try {
       const updatedPedido = await pedidoService.updatePedidoEstado(pedido, nuevoEstado)
-      setPedidos((prev) => prev.map((p) => (p.orderId === pedido.orderId ? updatedPedido : p)))
+      // Con un filtro de estado activo, el pedido que cambia deja de pertenecer al listado.
+      setPedidos((prev) =>
+        estadoFilter !== "all" && updatedPedido.status !== estadoFilter
+          ? prev.filter((p) => p.orderId !== pedido.orderId)
+          : prev.map((p) => (p.orderId === pedido.orderId ? updatedPedido : p)),
+      )
       toast({
         title: "Estado actualizado",
         description: `El pedido #${pedido.orderId} ahora está ${estadoLabels[nuevoEstado].toLowerCase()}`,

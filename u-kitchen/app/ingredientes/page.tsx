@@ -36,6 +36,9 @@ export default function IngredientesPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [stockBajoFilter, setStockBajoFilter] = useState<string>("all")
+  // Qué ingredientes están bajo stock lo decide el backend (stock <= stockLimit en SQL),
+  // no una cuenta en el cliente.
+  const [bajoStockIds, setBajoStockIds] = useState<Set<string>>(new Set())
   const [unidadMedidaFilter, setUnidadMedidaFilter] = useState<string>("all")
   const [modalOpen, setModalOpen] = useState(false)
   const [editingIngrediente, setEditingIngrediente] = useState<Ingrediente | undefined>()
@@ -47,7 +50,12 @@ export default function IngredientesPage() {
   const loadIngredientes = async () => {
     try {
       setLoading(true)
-      setIngredientes(await ingredienteService.getIngredientes())
+      const [todos, bajoStock] = await Promise.all([
+        ingredienteService.getIngredientes(),
+        ingredienteService.getIngredientesBajoStock(),
+      ])
+      setIngredientes(todos)
+      setBajoStockIds(new Set(bajoStock.map((i) => i.id)))
     } catch (error) {
       toast({
         title: "Error",
@@ -68,12 +76,12 @@ export default function IngredientesPage() {
         ingrediente.cod.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesStockBajo =
         stockBajoFilter === "all" ||
-        (stockBajoFilter === "bajo" && ingrediente.stock <= ingrediente.stockLimit) ||
-        (stockBajoFilter === "normal" && ingrediente.stock > ingrediente.stockLimit)
+        (stockBajoFilter === "bajo" && bajoStockIds.has(ingrediente.id)) ||
+        (stockBajoFilter === "normal" && !bajoStockIds.has(ingrediente.id))
       const matchesUnidadMedida = unidadMedidaFilter === "all" || ingrediente.uniteOfMeasure === unidadMedidaFilter
       return matchesSearch && matchesStockBajo && matchesUnidadMedida
     })
-  }, [ingredientes, searchTerm, stockBajoFilter, unidadMedidaFilter])
+  }, [ingredientes, searchTerm, stockBajoFilter, unidadMedidaFilter, bajoStockIds])
 
   const { page, setPage, totalPages, pageItems } = usePagination(filteredIngredientes)
 
@@ -115,7 +123,7 @@ export default function IngredientesPage() {
   }
 
   const getStockBadge = (ingrediente: Ingrediente) => {
-    if (ingrediente.stock <= ingrediente.stockLimit) {
+    if (bajoStockIds.has(ingrediente.id)) {
       return (
         <Badge className="bg-red-100 text-red-800">
           <AlertTriangle className="mr-1 h-3 w-3" />
@@ -224,7 +232,7 @@ export default function IngredientesPage() {
         <Card>
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-red-600">
-              {ingredientes.filter((i) => i.stock <= i.stockLimit).length}
+              {ingredientes.filter((i) => bajoStockIds.has(i.id)).length}
             </div>
             <p className="text-xs text-muted-foreground">Stock Bajo</p>
           </CardContent>
@@ -232,7 +240,7 @@ export default function IngredientesPage() {
         <Card>
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-green-600">
-              {ingredientes.filter((i) => i.stock > i.stockLimit).length}
+              {ingredientes.filter((i) => !bajoStockIds.has(i.id)).length}
             </div>
             <p className="text-xs text-muted-foreground">Stock Normal</p>
           </CardContent>

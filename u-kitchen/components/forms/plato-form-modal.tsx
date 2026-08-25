@@ -125,8 +125,7 @@ export function PlatoFormModal({ open, onOpenChange, plato, onSuccess }: PlatoFo
   const loadChefs = async () => {
     try {
       setChefsLoading(true)
-      const empleados = await empleadoService.getEmpleados()
-      setChefs(empleados.filter((e) => e.role === EmployeeRole.CHEF))
+      setChefs(await empleadoService.getEmpleados({ role: EmployeeRole.CHEF }))
     } catch (error) {
       toast({
         title: "Error",
