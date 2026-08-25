@@ -2,33 +2,37 @@ import { Cliente } from './cliente.types';
 import { Mesa } from './mesa.types';
 
 export enum ReservaEstado {
-  PENDIENTE = "PENDIENTE",
-  CONFIRMADA = "CONFIRMADA",
-  EN_CURSO = "EN_CURSO",
-  COMPLETADA = "COMPLETADA",
-  CANCELADA = "CANCELADA",
-  NO_SHOW = "NO_SHOW",
+  PENDIENTE = "pendiente",
+  CONFIRMADA = "confirmada",
+  CANCELADA = "cancelada",
+  COMPLETADA = "completada",
 }
 
+// `dateTime` es el ISO que manda el backend, no un Date.
 export interface Reserva {
   id: string
-  cliente: Cliente
-  mesa: Mesa
-  fechaHoraInicio: Date
-  duracion: number // en minutos
-  fechaHoraFin: Date
-  cantidadPersonas: number
-  notas?: string
-  estado: ReservaEstado
-  createdAt: Date
-  updatedAt: Date
+  dateTime: string
+  numberOfPeople: number
+  status: ReservaEstado
+  client: Cliente
+  table: Mesa
 }
 
 export interface CreateReservaRequest {
-  clienteId: string
-  mesaId: string
-  fechaHoraInicio: Date
-  duracion: number
-  cantidadPersonas: number
-  notas?: string
+  dateTime: string
+  numberOfPeople: number
+  status: ReservaEstado
+  client: {
+    id: string
+  }
+  table: {
+    id: string
+  }
+}
+
+// Filtros para Reserva
+export interface ReservaFilters {
+  estado?: ReservaEstado
+  fecha?: string
+  mesaId?: string
 }

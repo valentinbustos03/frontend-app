@@ -2,6 +2,7 @@ import { PedidoEstado } from "@/types/pedido.types"
 import { EmployeeRole, EmployeeShift } from "@/types/empleado.types"
 import { UnidadMedida } from "@/types/ingrediente.types"
 import { UserRole } from "@/types/usuario.types"
+import { ReservaEstado } from "@/types/reserva.types"
 import {
   Clock,
   AlertCircle,
@@ -78,6 +79,20 @@ export const unidadMedidaLabels: Record<UnidadMedida, string> = {
   [UnidadMedida.LIBRAS]: "Libras (lb)",
   [UnidadMedida.GALONES]: "Galones (gal)",
   [UnidadMedida.CUARTOS]: "Cuartos (qt)",
+}
+
+export const reservaEstadoLabels: Record<ReservaEstado, string> = {
+  [ReservaEstado.PENDIENTE]: "Pendiente",
+  [ReservaEstado.CONFIRMADA]: "Confirmada",
+  [ReservaEstado.CANCELADA]: "Cancelada",
+  [ReservaEstado.COMPLETADA]: "Completada",
+}
+
+export const reservaEstadoColors: Record<ReservaEstado, string> = {
+  [ReservaEstado.PENDIENTE]: "bg-yellow-100 text-yellow-800",
+  [ReservaEstado.CONFIRMADA]: "bg-green-100 text-green-800",
+  [ReservaEstado.CANCELADA]: "bg-red-100 text-red-800",
+  [ReservaEstado.COMPLETADA]: "bg-blue-100 text-blue-800",
 }
 
 export const userRoleLabels: Record<UserRole, string> = {

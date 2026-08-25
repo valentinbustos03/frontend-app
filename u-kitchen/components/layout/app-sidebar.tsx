@@ -102,7 +102,6 @@ const menuItems: MenuGroup[] = [
         label: "Reservas",
         icon: Calendar,
         href: "/reservas",
-        disabled: true,
         allowedFor: ["admin", "empleado"],
       },
     ],

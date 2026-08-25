@@ -140,6 +140,9 @@ export default function MesasPage() {
         <div>
           <h1 className="text-3xl font-bold text-orange-600">Gestión de Mesas</h1>
           <p className="text-gray-600">Administra las mesas del restaurante y su disponibilidad</p>
+          <p className="text-xs text-gray-500">
+            El estado también se recalcula solo: una mesa queda ocupada mientras tenga una reserva confirmada.
+          </p>
         </div>
         <Button
           onClick={() => {
