@@ -19,12 +19,14 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plato } from "@/types/plato.types"
 import { platoService } from "@/services/plato-service"
+import { promocionService } from "@/services/promocion-service"
 import { mesaService } from "@/services/mesa-service"
 import { empleadoService } from "@/services/empleado-service"
 import { pedidoService } from "@/services/pedido-service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
 import { describirErrorPedido } from "@/lib/pedido-errors"
+import { mejorDescuentoPorPlato, precioConDescuento } from "@/lib/promociones"
 import { useCartStore } from "@/lib/stores/cart-store"
 import type { Mesa } from "@/types/mesa.types"
 import type { Empleado } from "@/types/empleado.types"
@@ -33,6 +35,7 @@ import { PedidoEstado } from "@/types/pedido.types"
 
 export default function MenuPage() {
   const [platos, setPlatos] = useState<Plato[]>([])
+  const [descuentos, setDescuentos] = useState<Map<string, number>>(new Map())
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [tagFilter, setTagFilter] = useState("all")
@@ -56,6 +59,7 @@ export default function MenuPage() {
 
   useEffect(() => {
     loadPlatos()
+    loadPromociones()
     loadMesasAndWaiters()
   }, [])
 
@@ -72,6 +76,16 @@ export default function MenuPage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Solo las promos vigentes: el backend usa las mismas para calcular el subtotal.
+  const loadPromociones = async () => {
+    try {
+      const promociones = await promocionService.getPromociones({ current: true })
+      setDescuentos(mejorDescuentoPorPlato(promociones))
+    } catch (error) {
+      console.error("Error loading promociones:", error)
     }
   }
 
@@ -94,6 +108,8 @@ export default function MenuPage() {
     }
   }
 
+  const precioFinal = (plato: Plato) => precioConDescuento(plato.price, descuentos.get(plato.id) ?? 0)
+
   const uniqueTags = useMemo(() => {
     return [...new Set(platos.map(p => p.tag))].sort()
   }, [platos])
@@ -108,14 +124,14 @@ export default function MenuPage() {
 
     res.sort((a, b) => {
       if (sortBy === "none") return 0
-      if (sortBy === "price-asc") return a.price - b.price
-      if (sortBy === "price-desc") return b.price - a.price
+      if (sortBy === "price-asc") return precioFinal(a) - precioFinal(b)
+      if (sortBy === "price-desc") return precioFinal(b) - precioFinal(a)
       if (sortBy === "calification-desc") return (b.calification || 0) - (a.calification || 0)
       return 0
     })
 
     return res
-  }, [platos, searchTerm, tagFilter, sortBy])
+  }, [platos, searchTerm, tagFilter, sortBy, descuentos])
 
   const grouped = useMemo(() => {
     const groups: { [tag: string]: Plato[] } = {}
@@ -133,9 +149,9 @@ export default function MenuPage() {
   const total = useMemo(() => {
     return Object.entries(cart).reduce((sum, [id, qty]) => {
       const plato = platos.find(p => p.id === id)
-      return sum + (qty * (plato?.price || 0))
+      return sum + (qty * (plato ? precioConDescuento(plato.price, descuentos.get(id) ?? 0) : 0))
     }, 0)
-  }, [cart, platos])
+  }, [cart, platos, descuentos])
 
   const confirmOrder = () => {
     if (Object.keys(cart).length === 0) {
@@ -325,7 +341,17 @@ export default function MenuPage() {
                             {plato.calification}/5
                           </p>
                         )}
-                        <p className="text-2xl font-bold text-orange-600">${plato.price.toFixed(2)}</p>
+                        {(descuentos.get(plato.id) ?? 0) > 0 ? (
+                          <div className="flex items-baseline gap-2">
+                            <p className="text-2xl font-bold text-orange-600">${precioFinal(plato).toFixed(2)}</p>
+                            <p className="text-sm text-gray-500 line-through">${plato.price.toFixed(2)}</p>
+                            <Badge className="bg-green-100 text-green-800">
+                              -{descuentos.get(plato.id)}%
+                            </Badge>
+                          </div>
+                        ) : (
+                          <p className="text-2xl font-bold text-orange-600">${plato.price.toFixed(2)}</p>
+                        )}
                         <div className="flex items-center justify-end">
                           {qty > 0 && (
                             <Button
@@ -377,7 +403,7 @@ export default function MenuPage() {
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
-                    <span>${(plato.price * qty).toFixed(2)}</span>
+                    <span>${(precioFinal(plato) * qty).toFixed(2)}</span>
                   </div>
                 </div>
               )

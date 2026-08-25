@@ -13,7 +13,8 @@ import {
   Truck,
   Wheat,
   ShoppingBasket,
-  BookOpen
+  BookOpen,
+  Percent
 } from "lucide-react"
 import {
   Sidebar,
@@ -125,6 +126,12 @@ const menuItems: MenuGroup[] = [
         label: "Platos",
         icon: ChefHat,
         href: "/platos",
+        allowedFor: ["admin", "empleado"],
+      },
+      {
+        label: "Promociones",
+        icon: Percent,
+        href: "/promociones",
         allowedFor: ["admin", "empleado"],
       },
     ],

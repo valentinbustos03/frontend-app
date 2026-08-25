@@ -18,6 +18,7 @@ const ROUTE_ACCESS: { prefix: string; roles: Role[] }[] = [
   { prefix: "/proveedores", roles: ["admin", "empleado"] },
   { prefix: "/ingredientes", roles: ["admin", "empleado"] },
   { prefix: "/platos", roles: ["admin", "empleado"] },
+  { prefix: "/promociones", roles: ["admin", "empleado"] },
   { prefix: "/reports", roles: ["admin"] },
 ];
 
