@@ -24,6 +24,7 @@ import { empleadoService } from "@/services/empleado-service"
 import { pedidoService } from "@/services/pedido-service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
+import { describirErrorPedido } from "@/lib/pedido-errors"
 import { useCartStore } from "@/lib/stores/cart-store"
 import type { Mesa } from "@/types/mesa.types"
 import type { Empleado } from "@/types/empleado.types"
@@ -193,7 +194,7 @@ export default function MenuPage() {
       console.error("Error creating pedido:", error)
       toast({
         title: "Error",
-        description: "No se pudo crear el pedido",
+        description: describirErrorPedido(error) ?? "No se pudo crear el pedido",
         variant: "destructive",
       })
     }

@@ -1,4 +1,10 @@
-import type { Pedido, CreatePedidoRequest, PedidoFilters, PedidoEstado } from "@/types/pedido.types"
+import type {
+  Pedido,
+  CreatePedidoRequest,
+  UpdatePedidoRequest,
+  PedidoFilters,
+  PedidoEstado,
+} from "@/types/pedido.types"
 import { api, type ApiResponse } from "@/lib/api"
 
 class PedidoService { 
@@ -42,7 +48,7 @@ class PedidoService {
     }
   }
 
-  async updatePedido(id: string, pedido: Partial<CreatePedidoRequest>): Promise<Pedido> {
+  async updatePedido(id: string, pedido: UpdatePedidoRequest): Promise<Pedido> {
     try {
       const response = await api.put<ApiResponse<Pedido>>(`/order/${id}`, pedido);
       return response.data
@@ -72,23 +78,7 @@ class PedidoService {
   }
 
   async updatePedidoEstado(pedido: Pedido, estado: PedidoEstado): Promise<Pedido> {
-    // El backend valida el body con OrderSchema completo (no parcial),
-    // por lo que un PUT con sólo { status } falla con 400. Reconstruimos el payload.
-    const payload: CreatePedidoRequest = {
-      description: pedido.description,
-      status: estado,
-      estimatedEndTime: new Date(pedido.estimatedEndTime).toISOString(),
-      endTime: pedido.endTime ? new Date(pedido.endTime).toISOString() : new Date().toISOString(),
-      orderItems: pedido.orderItems.map((item) => ({
-        dish: { id: item.dish.id },
-        quantity: item.quantity,
-      })),
-      client: { id: pedido.client.id },
-      table: { id: pedido.table.id },
-      waiter: { id: pedido.waiter.id },
-    }
-    const response = await api.put<ApiResponse<Pedido>>(`/order/${pedido.orderId}`, payload)
-    return response.data
+    return this.updatePedido(pedido.orderId, { status: estado })
   }
 }
 

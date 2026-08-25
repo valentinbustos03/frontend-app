@@ -34,6 +34,11 @@ export interface Pedido {
   bill?: Factura
 }
 
+export interface UpdatePedidoRequest {
+  status: PedidoEstado
+  description?: string
+}
+
 export interface CreatePedidoRequest {
   description?: string;
   status: PedidoEstado;  // e.g., "pendiente" (usa el enum PedidoEstado si lo prefieres: PedidoEstado)
@@ -54,6 +59,24 @@ export interface CreatePedidoRequest {
   waiter: {
     id: string;
   }
+}
+
+// Detalle que manda el backend en los errores de negocio del pedido.
+export interface FaltanteStock {
+  id: string
+  name: string
+  stock: number
+  required: number
+}
+
+export interface ReferenciaFaltante {
+  tipo: "client" | "table" | "waiter" | "dish"
+  id: string
+}
+
+export interface TransicionInvalida {
+  from: PedidoEstado
+  to: PedidoEstado
 }
 
 // Filtros para Pedido

@@ -23,6 +23,7 @@ export interface Ingrediente {
   uniteOfMeasure: UnidadMedida
   origin: string
   stockLimit: number
+  unitCost: number
   suppliers: Proveedor[]
   dishes: Plato[]
 }
@@ -35,6 +36,7 @@ export interface CreateIngredienteRequest {
   uniteOfMeasure: UnidadMedida
   origin: string
   stockLimit: number
+  unitCost: number
   suppliers: {
     id: string;
   }[];

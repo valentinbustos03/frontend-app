@@ -164,19 +164,21 @@ export default function PlatoDetailPage() {
                   <TableHead>Código</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Unidad</TableHead>
+                  <TableHead className="text-right">Cantidad</TableHead>
                   <TableHead className="text-right">Stock actual</TableHead>
                   <TableHead className="text-right">Stock límite</TableHead>
                   <TableHead className="w-[100px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {plato.ingredients.map((ing) => {
+                {plato.ingredients.map(({ ingredient: ing, quantity }) => {
                   const lowStock = ing.stock <= ing.stockLimit
                   return (
                     <TableRow key={ing.id}>
                       <TableCell className="font-mono text-sm">{ing.cod}</TableCell>
                       <TableCell className="font-medium">{ing.name}</TableCell>
                       <TableCell>{unidadMedidaLabels[ing.uniteOfMeasure] ?? ing.uniteOfMeasure}</TableCell>
+                      <TableCell className="text-right font-medium">{quantity}</TableCell>
                       <TableCell className="text-right">
                         <span className={lowStock ? "text-red-500 font-semibold" : ""}>{ing.stock}</span>
                         {lowStock && <AlertTriangle className="inline ml-1 h-3 w-3 text-red-500" />}

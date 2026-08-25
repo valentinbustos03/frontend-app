@@ -2,7 +2,7 @@
 
 import { useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { AlertTriangle, Truck, ChefHat, Package, Globe } from "lucide-react"
+import { AlertTriangle, Truck, ChefHat, Package, Globe, DollarSign } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -71,6 +71,11 @@ export default function IngredienteDetailPage() {
       label: "Stock mínimo",
       value: `${ingrediente.stockLimit} ${ingrediente.uniteOfMeasure}`,
       icon: AlertTriangle,
+    },
+    {
+      label: "Costo unitario",
+      value: `$${Number(ingrediente.unitCost).toFixed(2)} / ${ingrediente.uniteOfMeasure}`,
+      icon: DollarSign,
     },
     { label: "Proveedores", value: ingrediente.suppliers?.length ?? 0, icon: Truck },
     { label: "Platos que lo usan", value: ingrediente.dishes?.length ?? 0, icon: ChefHat },

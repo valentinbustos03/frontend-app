@@ -56,10 +56,15 @@ async function parseErrorBody(response: Response): Promise<{ message: string; de
   const contentType = response.headers.get("content-type") ?? ""
   if (contentType.includes("application/json")) {
     try {
-      const body = (await response.json()) as { message?: string; error?: unknown }
+      const body = (await response.json()) as {
+        message?: string
+        error?: unknown
+        data?: unknown
+      }
       return {
         message: body.message ?? `HTTP ${response.status}`,
-        details: body.error,
+        // `error` en los errores de validación, `data` en los de negocio.
+        details: body.error ?? body.data,
       }
     } catch {
       return { message: `HTTP ${response.status}` }

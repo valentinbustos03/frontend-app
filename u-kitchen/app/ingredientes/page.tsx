@@ -255,6 +255,7 @@ export default function IngredientesPage() {
                 <TableHead>Ingrediente</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Unidad</TableHead>
+                <TableHead className="text-right">Costo unitario</TableHead>
                 <TableHead>Proveedores</TableHead>
                 <TableHead>Origen</TableHead>
                 <TableHead>Estado</TableHead>
@@ -283,6 +284,9 @@ export default function IngredientesPage() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{ingrediente.uniteOfMeasure}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    ${Number(ingrediente.unitCost).toFixed(2)}
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">

@@ -1,6 +1,13 @@
 import { Ingrediente } from './ingrediente.types';
 import { Empleado } from './empleado.types';
 
+// El backend guarda la receta en una tabla intermedia: cada ingrediente del plato
+// viene con la cantidad que usa.
+export interface PlatoIngrediente {
+  ingredient: Ingrediente
+  quantity: number
+}
+
 export interface Plato {
   id: string
   cod: string
@@ -10,7 +17,7 @@ export interface Plato {
   price: number
   calification?: number
   tag: string
-  ingredients: Ingrediente[]
+  ingredients: PlatoIngrediente[]
   chef: string
 }
 
@@ -24,6 +31,7 @@ export interface CreatePlatoRequest {
   tag: string
   ingredients: {
       id: string;
+      quantity: number;
   }[];
   chef: Empleado
 }

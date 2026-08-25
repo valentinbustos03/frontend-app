@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { pedidoService } from "@/services/pedido-service"
+import { describirErrorPedido } from "@/lib/pedido-errors"
 import { facturaService } from "@/services/factura-service"
 import { type Pedido, PedidoEstado } from "@/types/pedido.types"
 import { estadoColors, estadoIcons, estadoLabels } from "@/lib/catalogs"
@@ -129,7 +130,7 @@ export default function PedidoDetailPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo actualizar el estado del pedido",
+        description: describirErrorPedido(error) ?? "No se pudo actualizar el estado del pedido",
         variant: "destructive",
       })
     } finally {

@@ -50,6 +50,7 @@ export function IngredienteFormModal({ open, onOpenChange, ingrediente, onSucces
       uniteOfMeasure: UnidadMedidaEnum.KILOGRAMOS,
       origin: "",
       stockLimit: 0,
+      unitCost: 0,
       suppliers: [],
     },
   })
@@ -76,6 +77,7 @@ export function IngredienteFormModal({ open, onOpenChange, ingrediente, onSucces
         uniteOfMeasure: ingrediente.uniteOfMeasure as UnidadMedida,
         origin: ingrediente.origin,
         stockLimit: ingrediente.stockLimit,
+        unitCost: ingrediente.unitCost,
         suppliers: ingrediente.suppliers.map((p) => ({id: p.id})), 
       } : {
         cod: "",
@@ -85,6 +87,7 @@ export function IngredienteFormModal({ open, onOpenChange, ingrediente, onSucces
         uniteOfMeasure: UnidadMedidaEnum.KILOGRAMOS,
         origin: "",
         stockLimit: 0,
+        unitCost: 0,
         suppliers: [],
       })
 
@@ -224,6 +227,23 @@ export function IngredienteFormModal({ open, onOpenChange, ingrediente, onSucces
                 min="0"
               />
               {errors.stockLimit && <p className="text-red-500 text-sm">{errors.stockLimit.message}</p>}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="unitCost">Costo Unitario ($)</Label>
+              <Input
+                id="unitCost"
+                type="number"
+                step="0.01"
+                {...register("unitCost", {
+                  required: "El costo unitario es requerido",
+                  min: { value: 0, message: "Debe ser mayor o igual a 0" },
+                  valueAsNumber: true
+                })}
+                min="0"
+              />
+              {errors.unitCost && <p className="text-red-500 text-sm">{errors.unitCost.message}</p>}
             </div>
           </div>
           <div className="space-y-2">

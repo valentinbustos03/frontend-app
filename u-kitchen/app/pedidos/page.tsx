@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { pedidoService } from "@/services/pedido-service"
+import { describirErrorPedido } from "@/lib/pedido-errors"
 import { type Pedido, PedidoEstado } from "@/types/pedido.types"
 import { estadoColors, estadoIcons, estadoLabels } from "@/lib/catalogs"
 import { PaginationControls } from "@/components/shared/pagination-controls"
@@ -82,7 +83,7 @@ export default function PedidosPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo actualizar el estado del pedido",
+        description: describirErrorPedido(error) ?? "No se pudo actualizar el estado del pedido",
         variant: "destructive",
       })
     }

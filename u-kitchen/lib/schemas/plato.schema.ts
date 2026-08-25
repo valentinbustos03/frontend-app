@@ -9,7 +9,15 @@ export const platoCreateSchema = z.object({
   calification: z.coerce.number().min(0).max(5).optional(),
   tag: z.string().min(1, "El tag es requerido").max(60),
   ingredients: z
-    .array(z.object({ id: z.string().min(1) }))
+    .array(
+      z.object({
+        id: z.string().min(1),
+        quantity: z.coerce
+          .number()
+          .int("La cantidad debe ser un entero")
+          .min(1, "La cantidad debe ser al menos 1"),
+      }),
+    )
     .min(1, "Asigná al menos un ingrediente"),
   chefId: z.string().min(1, "Asigná un chef"),
 })

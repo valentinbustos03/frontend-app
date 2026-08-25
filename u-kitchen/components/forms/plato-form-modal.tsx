@@ -78,7 +78,9 @@ export function PlatoFormModal({ open, onOpenChange, plato, onSuccess }: PlatoFo
           price: plato?.price ?? 0,
           calification: plato?.calification ?? 0,
           tag: plato?.tag ?? "",
-          ingredients: plato ? plato.ingredients.map(i => ({ id: i.id })) : [],
+          ingredients: plato
+            ? plato.ingredients.map((i) => ({ id: i.ingredient.id, quantity: i.quantity }))
+            : [],
         });
 
         await Promise.all([loadIngredientes(), loadChefs()]);
@@ -136,7 +138,7 @@ export function PlatoFormModal({ open, onOpenChange, plato, onSuccess }: PlatoFo
     }
   }
 
-  const ingredientIds = watch("ingredients")
+  const recipe = watch("ingredients")
 
   const onFormSubmit = async (formData: CreatePlatoRequest) => {
     setLoading(true)
@@ -182,11 +184,20 @@ export function PlatoFormModal({ open, onOpenChange, plato, onSuccess }: PlatoFo
   }
 
   const handleIngredienteChange = (ingredienteId: string, checked: boolean) => {
-    const currentIds = ingredientIds || []
-    const newIds = checked
-      ? [...currentIds, {id: ingredienteId}]
-      : currentIds.filter((i) => i.id !== ingredienteId)
-    setValue("ingredients", newIds)
+    const current = recipe || []
+    setValue(
+      "ingredients",
+      checked
+        ? [...current, { id: ingredienteId, quantity: 1 }]
+        : current.filter((i) => i.id !== ingredienteId),
+    )
+  }
+
+  const handleCantidadChange = (ingredienteId: string, quantity: number) => {
+    setValue(
+      "ingredients",
+      (recipe || []).map((i) => (i.id === ingredienteId ? { ...i, quantity } : i)),
+    )
   }
 
   return (
@@ -310,23 +321,41 @@ export function PlatoFormModal({ open, onOpenChange, plato, onSuccess }: PlatoFo
             {errors.chef && <p className="text-red-500 text-sm">{errors.chef.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label>Ingredientes</Label>
+            <Label>Receta</Label>
+            <p className="text-xs text-gray-500">
+              Cantidad de cada ingrediente que consume una porción del plato.
+            </p>
             {ingredientesLoading ? (
               <p className="text-gray-500">Cargando ingredientes...</p>
             ) : (
               <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto border rounded-md p-2">
-                {ingredientes.map((ingrediente) => (
-                  <div key={ingrediente.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`ingrediente-${ingrediente.id}`}
-                      checked={(ingredientIds || []).some(i => i.id === ingrediente.id)}
-                      onCheckedChange={(checked) => handleIngredienteChange(ingrediente.id, checked as boolean)}
-                    />
-                    <Label htmlFor={`ingrediente-${ingrediente.id}`} className="text-sm font-normal cursor-pointer">
-                      {ingrediente.cod} - {ingrediente.name}
-                    </Label>
-                  </div>
-                ))}
+                {ingredientes.map((ingrediente) => {
+                  const item = (recipe || []).find((i) => i.id === ingrediente.id)
+                  return (
+                    <div key={ingrediente.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`ingrediente-${ingrediente.id}`}
+                        checked={!!item}
+                        onCheckedChange={(checked) => handleIngredienteChange(ingrediente.id, checked as boolean)}
+                      />
+                      <Label htmlFor={`ingrediente-${ingrediente.id}`} className="text-sm font-normal cursor-pointer flex-1">
+                        {ingrediente.cod} - {ingrediente.name}
+                      </Label>
+                      {item && (
+                        <div className="flex items-center space-x-1">
+                          <Input
+                            type="number"
+                            className="h-8 w-20"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => handleCantidadChange(ingrediente.id, Number(e.target.value))}
+                          />
+                          <span className="text-xs text-gray-500 w-10">{ingrediente.uniteOfMeasure}</span>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>

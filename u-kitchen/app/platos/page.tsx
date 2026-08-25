@@ -247,7 +247,7 @@ export default function PlatosPage() {
                     <div className="text-sm">
                       {plato.ingredients.length > 0 ? (
                         <div>
-                          <div className="font-medium">{plato.ingredients[0].name}</div>
+                          <div className="font-medium">{plato.ingredients[0].ingredient.name}</div>
                           {plato.ingredients.length > 1 && (
                             <div className="text-gray-500">+{plato.ingredients.length - 1} más</div>
                           )}

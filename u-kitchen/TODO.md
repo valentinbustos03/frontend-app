@@ -5,14 +5,19 @@ Los cambios que dependen del backend están marcados con 🔗. El detalle del
 esquema de autenticación está en [`AUTENTICACION.md`](../../AUTENTICACION.md).
 
 Estado general: el CRUD de todos los módulos, las páginas de detalle `[id]/`,
-el dashboard y `mis-pedidos` están **completos**. Lo que queda son features que
-dependen del backend y algo de deuda técnica. Ojo que nada se puede probar de punta
-a punta hasta que exista el módulo `auth/` del backend (punto 1).
+el dashboard y `mis-pedidos` están **completos**. Ojo que nada se puede probar de
+punta a punta hasta que exista el módulo `auth/` del backend (punto 1).
+
+El backend avanzó fuerte (`v2.04` → `v2.15`: reservas, promociones, recetas con
+cantidad, control de stock, listados filtrados). Lo que se rompía ya está adaptado
+(punto 3); lo que queda son las features nuevas que habilita: puntos 4 a 6.
 
 ---
 
 ## ✅ Hecho (última tanda)
 
+- **Frontend adaptado a los cambios del backend** (ver el punto 3): recetas con
+  cantidad, `unitCost`, errores de negocio del pedido y `PUT` acotado.
 - **Respuesta de los services normalizada** (ver el punto 2): todos desenvuelven
   `{message, data}`, lo que arregla las páginas de detalle `[id]/`.
 - **Autenticación** (ver el detalle en el punto 1): login real con credenciales,
@@ -77,39 +82,126 @@ desenvolvían `.data` a mano en cada página.
 - [x] `types/common.types.ts` borrado: `PaginatedResponse<T>` mentía (el backend nunca
       manda `total`/`page`/`limit`/`totalPages`) y quedó sin uso.
 
+### 3. Adaptar el frontend a los cambios del backend ✅
+Resuelto. Detalle de cada subpunto:
+
+#### 3.1 Recetas: `Plato.ingredients` cambió de forma ✅
+```
+respuesta:  ingredients: [{ ingredient: { id, name, ... }, quantity: 200 }]
+request:    ingredients: [{ id: "...", quantity: 200 }]
+```
+
+- [x] Tipo `PlatoIngrediente` en `types/plato.types.ts` y `quantity` en
+      `CreatePlatoRequest.ingredients`.
+- [x] `quantity` (entero ≥ 1) en `lib/schemas/plato.schema.ts`.
+- [x] `plato-form-modal.tsx`: la sección pasó a llamarse "Receta" y cada ingrediente
+      tildado muestra un input de cantidad al lado, con la unidad de medida.
+      Al tildar arranca en 1.
+- [x] `app/platos/page.tsx` y `app/platos/[id]/page.tsx` leen la forma nueva; el
+      detalle muestra una columna "Cantidad".
+
+#### 3.2 `unitCost` es obligatorio en ingredientes ✅
+- [x] `unitCost` en el type, el schema y el form (requerido, ≥ 0).
+- [x] Columna "Costo unitario" en el listado y stat en el detalle.
+
+#### 3.3 Errores de negocio nuevos ✅
+El detalle de estos errores viaja en `data`, no en `error`, así que `lib/api.ts` ahora
+lo levanta con `body.error ?? body.data` y lo deja en `ApiError.details`.
+
+- [x] `lib/pedido-errors.ts` traduce los tres casos a un mensaje en castellano:
+      stock insuficiente (lista qué falta y cuánto), referencias inexistentes y
+      transición de estado inválida. Devuelve `null` si el error es otro, así que el
+      llamador conserva su mensaje genérico.
+- [x] Usado en `app/menu/page.tsx` (crear pedido) y en el cambio de estado de
+      `app/pedidos/page.tsx` y `app/pedidos/[id]/page.tsx`.
+
+#### 3.4 `PUT /order/:id` acotado ✅
+- [x] `updatePedidoEstado` manda solo `{ status }` en vez de reconstruir el pedido
+      completo, y `updatePedido` ahora recibe `UpdatePedidoRequest`
+      (`{ status, description? }`) en vez de `Partial<CreatePedidoRequest>`.
+
+#### 3.5 `Mesa.occupied` la calcula el backend ⏸️
+Postergado hasta tener la UI de reservas (punto 4): hoy el toggle manual de
+`app/mesas/page.tsx` es la única forma de marcar una mesa como ocupada, así que
+sacarlo dejaría el dato sin manera de editarse. Cuando exista la pantalla de reservas,
+decidir si se saca el toggle o se aclara en la UI que es informativo.
+
 ---
 
 ## 🟡 Prioridad media (features incompletas)
 
-### 3. Módulo Reservas 🔗
-`types/reserva.types.ts` (`Reserva`, `CreateReservaRequest`, `ReservaEstado`) existe
-pero **no hay service ni página**. En el sidebar `/reservas` está `disabled: true`.
+### 4. Módulo Reservas 🔗 (backend listo)
+Ya existe `/reservation` en el backend con las 5 rutas de la convención. El problema
+es que [types/reserva.types.ts](types/reserva.types.ts) **no coincide en nada** con la
+entidad real: tiene `fechaHoraInicio`, `duracion`, `notas`, `fechaHoraFin` y estados
+`EN_CURSO` / `NO_SHOW` que no existen.
 
-- [ ] Backend: no existe entidad/módulo `reservation` 🔗 (crear primero).
-- [ ] `services/reserva-service.ts`.
-- [ ] Página `app/reservas/page.tsx` (+ detalle si aplica) y habilitar el item del sidebar.
+Forma real: `{ id, dateTime, numberOfPeople, status, client, table }`, con
+`status` en `pendiente | confirmada | cancelada | completada` (minúscula).
 
-### 4. Página Configuración
+Reglas del backend a reflejar en la UI:
+- `dateTime` no puede estar en el pasado **al crear** (al editar sí se permite, para
+  poder marcar como completada una reserva vieja).
+- `numberOfPeople` no puede superar `Table.capacity`.
+- Dos reservas *confirmadas* en la misma mesa deben estar a más de 2 horas de
+  distancia; dos *pendientes* pueden convivir. El conflicto llega como `409`.
+
+- [ ] Reescribir `types/reserva.types.ts` contra la entidad real.
+- [ ] `lib/schemas/reserva.schema.ts`.
+- [ ] `services/reserva-service.ts` (`/reservation/add|findAll|id/:id|:id`).
+- [ ] Página `app/reservas/page.tsx` + form modal, y habilitar el item del sidebar
+      (hoy `disabled: true`).
+- [ ] Manejar el `409` con el mensaje que manda el backend.
+
+### 5. Módulo Promociones 🔗 (backend listo)
+CRUD nuevo en `/promotion`, sin nada en el frontend todavía. Entidad:
+`{ id, cod, name, description?, discountPercentage, dateFrom, dateTo, active, dishes }`.
+
+El backend aplica automáticamente **el mejor descuento vigente por plato** al calcular
+`Order.subtotal`, así que la UI no calcula nada: solo administra promociones y, si se
+quiere, las muestra.
+
+- [ ] `types/promocion.types.ts`, `lib/schemas/promocion.schema.ts`,
+      `services/promocion-service.ts`.
+- [ ] Página `app/promociones/page.tsx` + form (multi-select de platos, `dishes`
+      requiere al menos uno) e item en el sidebar.
+- [ ] Opcional: badge de descuento en el menú usando `GET /promotion/findAll?current=true`.
+
+### 6. Filtros server-side y stock bajo 🔗 (backend listo)
+Los listados filtran todo en el cliente. Ahora hay endpoints para hacerlo bien:
+
+- [ ] `GET /ingredient/lowStock` — reemplaza el filtro "stock bajo" client-side de
+      `app/ingredientes/page.tsx`. Sirve también para un widget en el dashboard.
+- [ ] `GET /order/findAll?status=&date=` — `date` en formato `YYYY-MM-DD`.
+- [ ] `GET /employee/findAll?shift=&role=&minCalification=` — ojo que
+      `minCalification` solo matchea `Waiter` (un `Chef` nunca lo cumple).
+- [ ] `PedidoFilters` / `EmpleadoFilters` en `types/` declaran filtros que el backend
+      no conoce (`fechaDesde`, `clienteId`, `mesaId`...) — alinearlos con lo que
+      realmente acepta.
+
+### 7. Página Configuración
 - [ ] `/settings` — item deshabilitado en el sidebar, sin página.
 - [ ] Header "Perfil" y "Configuración" siguen `disabled` en `components/layout/header.tsx` — apuntar a una página o quitarlos.
 
-### 5. Cálculo de tiempos del pedido 🔗
+### 8. Cálculo de tiempos del pedido 🔗
 En `app/menu/page.tsx` `estimatedEndTime`/`endTime` se **hardcodean a +30 min**
 con el comentario "hay que modificar backend".
 
 - [ ] Que el backend calcule/estime los tiempos 🔗 y que el frontend deje de hardcodearlos.
 
-### 6. Facturas (opcional)
-- [ ] Página/listado de facturas (la generación ya está implementada).
+### 9. Facturas
+`GET /order/bill/findAll` ya existe, así que se puede hacer entero sin tocar el backend.
+
+- [ ] Método `getFacturas()` en `services/factura-service.ts` y página de listado.
 
 ---
 
 ## 🟢 Prioridad baja (limpieza / pulido)
 
-### 7. Detalles menores
+### 10. Detalles menores
 - [ ] Badge de chef comentado en `app/menu/page.tsx` — decidir si va o se borra.
 
-### 8. Ajustes de tipos (deuda técnica, no bloqueante)
+### 11. Ajustes de tipos (deuda técnica, no bloqueante)
 - [ ] `types/plato.types.ts`: `Plato.chef: string` vs `CreatePlatoRequest.chef: Empleado` — revisar.
 - [ ] `types/empleado.types.ts`: `shift: string` en vez del enum `EmployeeShift`; considerar discriminated union por rol.
 - [ ] `types/cliente.types.ts`: `orderHistory: Pedido[]` es requerido pero normalmente no viene poblado.
@@ -129,3 +221,8 @@ Los endpoints nuevos agregados en los services **existen y coinciden** en el bac
 | `GET /table/cod/:cod` | ✅ existe (campo `cod`, no `code`) |
 | `GET /order/findAllClientOrders/:clientId` | ✅ existe (el param se llama `:id`; requiere ID numérico) |
 | `POST /order/:id/bill/add` | ✅ existe (usado por la generación de facturas) |
+| `GET /order/bill/findAll` | ✅ existe (sin usar todavía — punto 9) |
+| `GET /ingredient/lowStock` | ✅ existe (sin usar todavía — punto 6) |
+| `GET /promotion/*` | ✅ existe (sin usar todavía — punto 5) |
+| `GET /reservation/*` | ✅ existe (sin usar todavía — punto 4) |
+| `POST /auth/login`, `/auth/logout`, `/auth/me` | ❌ **no existe** — punto 1 |

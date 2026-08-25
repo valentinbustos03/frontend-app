@@ -12,6 +12,7 @@ export const ingredienteCreateSchema = z
     }),
     origin: z.string().min(1, "El origen es requerido").max(120),
     stockLimit: z.coerce.number().min(0, "El límite de stock no puede ser negativo"),
+    unitCost: z.coerce.number().min(0, "El costo unitario no puede ser negativo"),
     suppliers: z
       .array(z.object({ id: z.string().min(1) }))
       .min(1, "Asigná al menos un proveedor"),
